@@ -1,0 +1,158 @@
+body {
+    font-family: Arial;
+    margin: 0;
+    padding: 0;
+}
+
+.full-page {
+    width: 100vw;
+    height: 120vh;
+    background: #f4f5f6;
+}
+
+header {
+    background-color: #2d3e43;
+    color: #ffffff;
+    margin-bottom: 30px;
+    overflow: hidden;
+}
+
+.head-content{
+    width: 1000px;
+    margin: 10px auto;
+}
+
+#nav {
+    list-style: none;
+    overflow: hidden;
+    padding-left: 0;
+}
+
+#nav li {
+    width: 100px;
+    height: 30px;
+    text-align: center;
+    float: left;
+    border: 1px solid #fff;
+    margin-right: 10px;
+    border-radius: 4px;
+}
+
+#nav li:hover{
+    opacity: 0.5;
+}
+
+#nav li a {
+    text-decoration: none;
+    color: #fff;
+    cursor: pointer;
+    user-select: none;
+}
+
+.disabled {
+    opacity: 0.5;
+    pointer-events: none;
+    
+}
+
+main{
+    
+}
+
+.main-content {
+    width: 1000px;
+    height: 350px;
+    background: #fff;
+    margin: 0 auto;
+    padding: 10px 20px;
+    border-radius: 8px;
+    border-top: 4px solid #6c777a;
+    border-bottom: 4px solid #6c777a;
+}
+
+.main-content #explain{
+    font-size: 24px;
+}
+
+.main-content .form-group{
+    margin-top: 28px;
+}
+
+.uploaded-content {
+    width: 800px;
+    margin: 0 auto;
+}
+
+.about-head {
+    width: 1000px;
+}
+
+.about-main {
+    width: 1000px;
+    height: 800px;
+}
+
+.about-main #explain {
+    font-size: 18px;
+}
+
+.about-main img {
+    width: 950px;
+}
+
+.help-main {
+    width: 1000px;
+    height: 450px;
+}
+
+.help-main #explain {
+    font-size: 20px;
+}
+
+.contact-main {
+    height: 80px;
+    font-size: 20px;
+}
+
+.contact-main #explain {
+    font-size: 20px;
+}
+
+
+/* ローディング画面 */
+#uploading {
+    width: 100vw;
+    height: 100vh;
+    transition: all 1s;
+    background-color: #808080;
+    position: fixed;
+    top: 0;
+    left: 0;
+    z-index: 9999;
+    opacity: 0.5;
+}
+
+.spinner {
+    width: 100px;
+    height: 100px;
+    margin: 200px auto;
+    background-color: #fff;
+    border-radius: 100%;
+    animation: sk-scaleout 1.0s infinite ease-in-out;
+}
+/* ローディングアニメーション */
+@keyframes sk-scaleout {
+    0% {
+        transform: scale(0);
+    }
+
+    100% {
+        transform: scale(1.0);
+        opacity: 0;
+    }
+}
+
+.loaded {
+    opacity: 0;
+    visibility: hidden;
+}

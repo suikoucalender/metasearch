@@ -1,0 +1,46 @@
+body {
+    font-family: Arial;
+    margin: 0;
+    padding: 0;
+}
+
+.full-page {
+    width: 100%;
+    height: 100%;
+    background: #f4f5f6;
+}
+
+header {
+    background-color: #2d3e43;
+    color: #ffffff;
+    margin-bottom: 30px;
+    overflow: hidden;
+}
+
+.head-content{
+    width: 1000px;
+    margin: 10px auto;
+}
+
+.main-content {
+    width: 1000px;
+    background: #fff;
+    margin: 0 auto;
+    padding: 20px;
+    border-radius: 8px;
+    border-top: 4px solid #6c777a;
+    border-bottom: 4px solid #6c777a;
+}
+
+.krona {
+    margin-bottom: 40px;
+}
+
+.krona h3{
+    margin-bottom: 20px;
+}
+
+#cor {
+    margin-bottom: 80px;
+}
+

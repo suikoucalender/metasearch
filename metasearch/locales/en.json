@@ -1,0 +1,7 @@
+{
+  "How": "How to use",
+  "Click": "Click the 'File Upload' button and select your own metagenome sequence data. (.fastq, .fq, fastq.gz, and fq.gz files can be uploaded only) Enter your email address to send the results. Click the Upload button. After the processing in the server is finished, the URL of the page to display the results will be sent to the email address you entered. (This process will take one to several hours)",
+  "Results": "Results",
+  "Theresults": "The results of homology search using blastn in the SILVA rRNA database and the assignment of the results to taxonomies using the lowest-common ancestor (LCA) method are displayed by Krona. The composition of the obtained microorganisms and the closest metagenomic data retrieved from the SRA, ERA, and DRA sequence data are displayed as a bar graph. The sample information of the metagenome data retrieved from the SRA, ERA, and DRA sequence data that is closest to the obtained microbial composition is displayed."
+
+}

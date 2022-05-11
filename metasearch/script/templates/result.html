@@ -1,0 +1,76 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="../stylesheets/result.css">
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/css/bootstrap.min.css" integrity="sha384-9aIt2nRpC12Uk9gS9baDl411NQApFmC26EwAOH8WgZl5MYYxFfc+NcPb1dKGj7Sk" crossorigin="anonymous">
+    <title>MetaSearch Result</title>
+</head>
+<body>
+    <div class="full-page">
+        <header>
+            <div class="head-content">
+                <h1>MetaSearch Result</h1>
+                <h3>${original_filename} ${rank}</h3>
+            </div>
+        </header>
+        <main>
+            <div class="main-content">
+                <div class="krona">
+                    <h3>Krona Compotion Graph (Query)</h3>
+                    <iframe src='./krona_out${rank}.html' width='800' height='400' frameborder='0'></iframe>
+                </div>
+
+                <div id="cor" class="result">
+                    <h3>Correlation</h3>
+                    <div class="composition_graph">
+                        <iframe src='./graphs_cor${rank}.html' width='800' height='420' frameborder='0'></iframe>
+                    </div>
+                    <div class="srr_summary">
+                        <h5>SRR Summary</h5>
+                        <ol id="srr_list">
+                            % for sra_data in cor_list:
+                            <li>
+                                <a href=https://www.ncbi.nlm.nih.gov/sra/?term=${sra_data['sra_id']}>${sra_data['sra_id']}</a>: ${sra_data['cor']}
+                                <ul>
+                                    <li>Study: ${sra_data['study']}</li>
+                                    <li>Sample: ${sra_data['sample']}</li>
+                                    <li>Organism: ${sra_data['organism']}</li>
+                                </ul>
+                            </li>
+                            %endfor
+                        </ol>
+                    </div> 
+                    
+                </div>
+
+                <div id="jaccard" class="result">
+                    <h3>Jaccard Distance</h3>
+                    <div class="composition_graph">
+                        <iframe src='./graphs_jaccard${rank}.html' width='800' height='420' frameborder='0'></iframe>
+                    </div>
+                    <div class="srr_summary">
+                        <h5>SRR Summary</h5>
+                        <ol id="srr_list">
+                            % for sra_data in jaccard_list:
+                            <li>
+                                <a href=https://www.ncbi.nlm.nih.gov/sra/?term=${sra_data['sra_id']}>${sra_data['sra_id']}</a>: ${sra_data['cor']}
+                                <ul>
+                                    <li>Study: ${sra_data['study']}</li>
+                                    <li>Sample: ${sra_data['sample']}</li>
+                                    <li>Organism: ${sra_data['organism']}</li>
+                                </ul>
+                            </li>
+                            %endfor
+                        </ol>
+                    </div> 
+                    
+                </div>
+
+            </div>
+        </main>
+    </div>
+</body>
+</html>

@@ -1,0 +1,90 @@
+extends layout
+
+block content
+    .full-page
+        header
+            .head-content
+                h1 MetaSearchDB
+                p Search the metagenome database for your metagenomic sequence data!
+                ul(id="nav")
+                    li(class="disabled")
+                        a(href="#") Home
+                    li
+                        a(href="./about") About
+                    li
+                        a(href="./help") Help
+                    li
+                        a(href="./contact") Contact
+        main
+            .main-content
+                p(id="explain") Upload fastq(.gz) file you want to search in the database
+                //form(action="./upload" method="POST" enctype="multipart/form-data")
+                .form-group
+                    label(for="inputfile") 1. Your Sequence File
+                    input(type="file" name="file" id="inputfile" class="form-control-file" accept=".fastq, .fastq.gz, .fq, .fq.gz")
+                .form-group
+                    label(for="email") 2. Your Email Address
+                    input(type="text" id="email" placeholder="name@example.com" class="form-control")
+                .form-group
+                button(type="button" id="btn" onclick="file_upload()" class="btn btn-secondary btn-lg btn-block") Submit
+    #uploading(class="loaded")
+        .spinner
+                
+
+    script.
+        var btn;
+        var upload_file;
+        var slice_size = 100 * 1024 * 1024;
+        var slice_file;
+        var formData = new FormData();
+        var email;
+        var regex = /^[a-zA-Z0-9_.+-]+@([a-zA-Z0-9][a-zA-Z0-9-]*[a-zA-Z0-9]*\.)+[a-zA-Z]{2,}$/;
+        var spinner = document.getElementById('uploading');
+        
+        function file_upload() {
+            upload_file = $("#inputfile")[0].files[0];
+        
+            $("#btn").prop({"disabled":true, "class":"disabled btn btn-secondary btn-lg btn-block"});
+
+            email = $("#email")[0].value;
+            if (!(regex.test(email))) {
+                console.log("incorrect email address");
+                alert("Not correct Email Address");
+                $("#email")[0].value = "";
+                $("#btn").prop({"disabled":false, "class":"btn btn-secondary btn-lg btn-block"});
+                return
+            }
+            
+            var original_file_name = upload_file.name;
+            if (!(original_file_name.endsWith('fastq') || original_file_name.endsWith('fastq.gz') || original_file_name.endsWith('fq') || original_file_name.endsWith('fq.gz'))){
+                alert("This uploaded file format is not allowed. Only '.fastq' , '.fq' , 'fastq.gz' and 'fq.gz' format is allowed.");
+                return;
+            }
+
+            spinner.classList.remove("loaded");
+
+            slice_file = upload_file.slice(0,slice_size);
+
+            formData.append('file', slice_file);
+            formData.append('email', email);
+            formData.append('filename', upload_file.name);
+            $.ajax({
+                type: "POST",
+                url: "./upload/",
+                data: formData,
+                processData: false,
+                contentType: false,
+            })
+            .done(function(res){
+                window.location.replace("./uploaded");
+                console.log("success");
+            })
+            .fail(function(res){
+                spinner.classList.add("loaded");
+                console.log("falied");
+            });
+        }
+
+
+
+

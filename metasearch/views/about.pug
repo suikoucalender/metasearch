@@ -1,0 +1,23 @@
+extends layout
+
+block content
+    .full-page
+        header
+            .head-content.about-head
+                h1 MetaSearchDB
+                p Search the metagenome database for your metagenomic sequence data!
+                ul(id="nav")
+                    li
+                        a(href="./") Home
+                    li(class="disabled")
+                        a(href="#") About
+                    li
+                        a(href="./help") Help
+                    li
+                        a(href="./contact") Contact
+        main
+            .main-content.about-main
+                p(id="explain") This database is a microbial composition database of 1,804,416 metagenomic data registered in SRA, ERA and DRA. It analyzes the metagenomic sequencing data uploaded by users, searches for the most similar metagenomic data, and returns the results. <br><br>
+                                The file uploaded by the user will be processed as follows. The uploaded FASTQ file is converted to FASTA and homology search is performed with the SILVA rRNA database using blastn. The BLAST results are assigned to taxonomy using the lowest-common ancestor (LCA) method. The metagenomic data closest to the obtained microbial composition is retrieved from the sequencing data of SRA, ERA and DRA, and the result will be notified by e-mail.
+                p
+                    img(src="img/metasearchdb.jpg")

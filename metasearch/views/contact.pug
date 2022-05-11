@@ -1,0 +1,20 @@
+extends layout
+
+block content
+    .full-page
+        header
+            .head-content.about-head
+                h1 MetaSearchDB
+                p Search the metagenome database for your metagenomic sequence data!
+                ul(id="nav")
+                    li
+                        a(href="./") Home
+                    li
+                        a(href="./about") About
+                    li
+                        a(href="./help") Help
+                    li(class="disabled")
+                        a(href="#") Contact
+        main
+            .main-content.contact-main
+                p(id="explain") If you have any questions, please contact us at 'suikoumeta@(at)googlegroups.com'
