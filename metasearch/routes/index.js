@@ -14,62 +14,63 @@ router.get('/', function (req, res, next) {
 });
 
 router.post('/upload', upload.single('file'), function (req, res, next) {
-    //ƒŠƒNƒGƒXƒg‚©‚çEmailƒAƒhƒŒƒX‚ğæ“¾
+    //ãƒªã‚¯ã‚¨ã‚¹ãƒˆã‹ã‚‰Emailã‚¢ãƒ‰ãƒ¬ã‚¹ã‚’å–å¾—
     var email = req.body.email;
 
-    //EmailƒAƒhƒŒƒX‚É•s—v‚È•¶š—ñ‚ğŠÜ‚Ü‚È‚¢‚©‚ğƒ`ƒFƒbƒN
+    //Emailã‚¢ãƒ‰ãƒ¬ã‚¹ã«ä¸è¦ãªæ–‡å­—åˆ—ã‚’å«ã¾ãªã„ã‹ã‚’ãƒã‚§ãƒƒã‚¯
     var regex = /^[a-zA-Z0-9_.+-]+@([a-zA-Z0-9][a-zA-Z0-9-]*[a-zA-Z0-9]*\.)+[a-zA-Z]{2,}$/;
     if (!(regex.test(email))) {
         console.log("incorrect email address");
         return
     }
 
-    //Œ³‚Ìƒtƒ@ƒCƒ‹–¼‚ğæ“¾
+    //å…ƒã®ãƒ•ã‚¡ã‚¤ãƒ«åã‚’å–å¾—
     var original_filename = req.body.filename;
 
-    //ƒtƒ@ƒCƒ‹–¼‚ÉŠÜ‚Ü‚ê‚éƒRƒ}ƒ“ƒhƒCƒ“ƒWƒFƒNƒVƒ‡ƒ“‚ğ”­¶‚µ‚¤‚é“Áê•¶š‚ğœ‹‚·‚é
+    //ãƒ•ã‚¡ã‚¤ãƒ«åã«å«ã¾ã‚Œã‚‹ã‚³ãƒãƒ³ãƒ‰ã‚¤ãƒ³ã‚¸ã‚§ã‚¯ã‚·ãƒ§ãƒ³ã‚’ç™ºç”Ÿã—ã†ã‚‹ç‰¹æ®Šæ–‡å­—ã‚’é™¤å»ã™ã‚‹
     original_filename = original_filename.replace(/\$/g, "_").replace(/\;/g, "_").replace(/\|/g, "_").replace(/\&/g, "_").replace(/\'/g, "_").replace(/\(/g, "_").replace(/\)/g, "_").replace(/\</g, "_").replace(/\>/g, "_").replace(/\*/g, "_").replace(/\?/g, "_").replace(/\{/g, "_").replace(/\}/g, "_").replace(/\[/g, "_").replace(/\]/g, "_").replace(/\!/g, "_").replace(/\`/g, "_").replace(/\"/g, "_");
 
-    //ƒŠƒNƒGƒXƒg‚Å‘—‚ç‚ê‚Ä—ˆ‚é•ªŠ„Œã‚Ìƒtƒ@ƒCƒ‹–¼‚ğæ“¾(Hash’l‚É‚È‚Á‚Ä‚¢‚é)
+    //ãƒªã‚¯ã‚¨ã‚¹ãƒˆã§é€ã‚‰ã‚Œã¦æ¥ã‚‹åˆ†å‰²å¾Œã®ãƒ•ã‚¡ã‚¤ãƒ«åã‚’å–å¾—(Hashå€¤ã«ãªã£ã¦ã„ã‚‹)
     var filename = req.file.filename;
 
-    //•ÏXŒã‚Ìƒtƒ@ƒCƒ‹–¼
+    //å¤‰æ›´å¾Œã®ãƒ•ã‚¡ã‚¤ãƒ«å
     var newfilename;
 
-    //“ú•t‚ğæ“¾
+    //æ—¥ä»˜ã‚’å–å¾—
     var dt = new Date();
 
-    //ƒ‰ƒ“ƒ_ƒ€‚È•¶š—ñ‚ğ¶¬
+    //ãƒ©ãƒ³ãƒ€ãƒ ãªæ–‡å­—åˆ—ã‚’ç”Ÿæˆ
     var chars = 'sdasdalASDKAJsdlaj298an2a2kd9';
     var rand_str = '';
     for (var i = 0; i < 8; i++) {
         rand_str += chars.charAt(Math.floor(Math.random() * chars.length));
     }
 
-    //“ú•t‚ÆEmailƒAƒhƒŒƒX‚Æƒ‰ƒ“ƒ_ƒ€•¶š—ñ‚©‚çƒnƒbƒVƒ…’l‚ğŒvZ
+    //æ—¥ä»˜ã¨Emailã‚¢ãƒ‰ãƒ¬ã‚¹ã¨ãƒ©ãƒ³ãƒ€ãƒ æ–‡å­—åˆ—ã‹ã‚‰ãƒãƒƒã‚·ãƒ¥å€¤ã‚’è¨ˆç®—
     var hash = crypto.createHash("md5").update(dt + email + rand_str).digest("hex");
 
-    //ƒnƒbƒVƒ…’l‚Æ“¯‚¶–¼‘O‚ÌƒfƒBƒŒƒNƒgƒŠ‚ğtmpˆÈ‰º‚Éì¬
+    //ãƒãƒƒã‚·ãƒ¥å€¤ã¨åŒã˜åå‰ã®ãƒ‡ã‚£ãƒ¬ã‚¯ãƒˆãƒªã‚’tmpä»¥ä¸‹ã«ä½œæˆ
     execSync("mkdir tmp/" + hash);
-    //HTMLƒtƒ@ƒCƒ‹•Û‘¶—p‚ÌƒfƒBƒŒƒNƒgƒŠ‚ğì¬
+    //HTMLãƒ•ã‚¡ã‚¤ãƒ«ä¿å­˜ç”¨ã®ãƒ‡ã‚£ãƒ¬ã‚¯ãƒˆãƒªã‚’ä½œæˆ
     execSync("mkdir tmp/" + hash + "/" + hash);
 
-    //Šg’£q‚É‡‚í‚¹‚ÄAV‚µ‚¢ƒtƒ@ƒCƒ‹–¼‚ÆˆÚ“®æ‚ÌƒpƒX‚ğİ’è
+    //æ‹¡å¼µå­ã«åˆã‚ã›ã¦ã€æ–°ã—ã„ãƒ•ã‚¡ã‚¤ãƒ«åã¨ç§»å‹•å…ˆã®ãƒ‘ã‚¹ã‚’è¨­å®š
     if (getExt(original_filename) == "gz") {
         newfilename = "tmp/" + hash + "/" + hash + ".gz";
     } else {
         newfilename = "tmp/" + hash + "/" + hash + ".fq";
     }
 
-    //ƒtƒ@ƒCƒ‹–¼‚Ì•ÏX‚Æƒtƒ@ƒCƒ‹‚ÌˆÚ“®
+    //ãƒ•ã‚¡ã‚¤ãƒ«åã®å¤‰æ›´ã¨ãƒ•ã‚¡ã‚¤ãƒ«ã®ç§»å‹•
     fs.rename("tmp/" + filename, newfilename, (err) => {
         if (err) throw err;
     });
 
-    //‹g•æ¶‚ÌƒXƒNƒŠƒvƒg‚ğÀs,HTML‚ğì¬
-    execSync("qsub -e ./qsub_log/e." + hash + " -o ./qsub_log/o." + hash + " -cwd -pe def_slot 4 -j y -N 'metasearch' script/metasearch_exec.sh " + newfilename + " " + hash + " " + original_filename + " " + email);
-
-    //ƒŒƒXƒ|ƒ“ƒX‚ğ•Ô‚·(‚±‚ê‚ª‚È‚¢‚ÆPOST‚ªãè‚­‚¢‚©‚È‚¢)
+    //å‰æ­¦å…ˆç”Ÿã®ã‚¹ã‚¯ãƒªãƒ—ãƒˆã‚’å®Ÿè¡Œ,HTMLã‚’ä½œæˆ
+    //execSync("qsub -e ./qsub_log/e." + hash + " -o ./qsub_log/o." + hash + " -cwd -pe def_slot 4 -j y -N 'metasearch' script/metasearch_exec.sh " + newfilename + " " + hash + " " + original_filename + " " + email);
+    //execSync("/opt/sge/bin/lx-amd64/qsub -e ./qsub_log/e." + hash + " -o ./qsub_log/o." + hash + " -j y -N metasearch script/qsubsh4 script/metasearch_exec.sh " + newfilename + " " + hash + " " + original_filename + " " + email);
+    execSync("script/run-qsub.sh "+hash+" "+newfilename+" "+original_filename+" "+email);
+    //ãƒ¬ã‚¹ãƒãƒ³ã‚¹ã‚’è¿”ã™(ã“ã‚ŒãŒãªã„ã¨POSTãŒä¸Šæ‰‹ãã„ã‹ãªã„)
     res.send("uploaded");
 });
 
