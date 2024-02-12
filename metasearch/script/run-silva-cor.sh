@@ -13,8 +13,9 @@ echo "tempdir: $tempdir"
 
 input=`readlink -f "$1"`
 
-maindir=$(dirname `readlink -f $0`)
-source "$maindir"/settings.sh
+#maindir=$(dirname `readlink -f $0`)
+sdir=$(dirname `readlink -f $0`)
+#source "$maindir"/settings.sh
 
 mkdir -p $tempdir/input
 cd $tempdir
@@ -27,7 +28,7 @@ else
 fi
 
 #BLAST->LCA解析を実行
-"$maindir"/metagenome~silva_SSU+LSU -c 8 -m 32 -d 50 -t 0.99 input
+"$sdir"/metagenome~silva_SSU+LSU -c 8 -m 32 -d 50 -t 0.99 input
 
 mv input/*.ssu.blast.filtered.name.lca.cnt2.input "$input".tsv
 cd /tmp
@@ -45,14 +46,14 @@ awk -F'\t' '
  FILENAME==ARGV[1]{a["root;"$2]=$3}
  FILENAME==ARGV[2]{if($1=="id"){if(FNR>1){for(i in cnt){if(i!=""){print i"\t"cnt[i]}}}; print $0; delete cnt}else{cnt[a[$1]]+=$2}}
  END{for(i in cnt){if(i!=""){print i"\t"cnt[i]}}}
-' <(zcat "$maindir"/SILVA_132_SSU-LSU_Ref.fasta.name.species.gz) "$input".tsv > "$input".species.tsv
+' <(zcat "$sdir"/SILVA_132_SSU-LSU_Ref.fasta.name.species.gz) "$input".tsv > "$input".species.tsv
 
 awk -F'\t' '
  FILENAME==ARGV[1]{a["root;"$2]=$3}
  FILENAME==ARGV[2]{if($1=="id"){if(FNR>1){for(i in cnt){if(i!=""){print i"\t"cnt[i]}}}; print $0; delete cnt}else{cnt[a[$1]]+=$2}}
  END{for(i in cnt){if(i!=""){print i"\t"cnt[i]}}}
-' <(zcat "$maindir"/SILVA_132_SSU-LSU_Ref.fasta.name.genus.gz) "$input".tsv > "$input".genus.tsv
+' <(zcat "$sdir"/SILVA_132_SSU-LSU_Ref.fasta.name.genus.gz) "$input".tsv > "$input".genus.tsv
 
-"$maindir"/calccor "$input".tsv "$maindir"/db_merge
-"$maindir"/calccor "$input".genus.tsv "$maindir"/db_genus_merge
-"$maindir"/calccor "$input".species.tsv "$maindir"/db_species_merge
+"$sdir"/calccor "$input".tsv "$sdir"/../data/db_merge
+#"$sdir"/calccor "$input".genus.tsv "$maindir"/../data/db_genus_merge
+#"$sdir"/calccor "$input".species.tsv "$maindir"/../data/db_species_merge

@@ -1,0 +1,13 @@
+#!/bin/bash
+#$ -S /bin/bash
+#$ -cwd
+#$ -pe def_slot_v251 4
+
+source ~/.bashrc
+
+echo SGE_JOB_SPOOL_DIR: "$SGE_JOB_SPOOL_DIR"
+echo CMD: "$@"
+eval "$@"
+
+echo CMD_FIN_STATUS: $?
+
