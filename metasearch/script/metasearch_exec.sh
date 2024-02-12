@@ -7,14 +7,17 @@ original_filename=$3
 usr_email=$4
 
 sdir=$(dirname `readlink -f $0`)
-#source "$maindir"/settings.sh
+maindir=$(dirname "$sdir")
+#source "$sdir"/settings.sh
 source ~/.bashrc
+
+set -x
 
 #DBディレクトリが格納されているディレクトリの絶対パス(必ず'/'を入れる)
 #dbPath=/usr/local/yoshitake/
-dbPath=$(dirname $(readlink -f $sdir/../data/db))
+dbPath=$(dirname $(readlink -f $maindir/data/db))
 
-script/run-silva-cor.sh $newfilename
+#script/run-silva-cor.sh $newfilename
 
 #Singularityのイメージがなければ、githubのリリースから取ってくる。ファイルサイズが大きいのでソースコードには含められない。
 if [ ! -e "${sdir}/python3_env_mako_installed.sif" ]; then
@@ -24,14 +27,14 @@ if [ ! -e "${sdir}/krona_v2.7.1_cv1.sif" ]; then
  wget -O "${sdir}/krona_v2.7.1_cv1.sif" https://github.com/suikoucalender/metasearch/releases/download/0.1/krona_v2.7.1_cv1.sif
 fi
 
-singularity run -B $dbPath $sdir/python3_env_mako_installed.sif python script/create_page.py $newfilename $original_filename $dbPath
+singularity run -B $maindir -B $dbPath $sdir/python3_env_mako_installed.sif python $sdir/create_page.py $newfilename $original_filename $dbPath
 
-for class in "" .genus .species
+for class in "" #.genus .species
 do
-	singularity run $sdir/krona_v2.7.1_cv1.sif ktImportText tmp/${hash}/result${class}.kraken -o tmp/${hash}/${hash}/krona_out${class}.html
+	singularity run -B $maindir $sdir/krona_v2.7.1_cv1.sif ktImportText $maindir/tmp/${hash}/result${class}.kraken -o $maindir/tmp/${hash}/${hash}/krona_out${class}.html
 done
 
 cp -r tmp/${hash}/${hash} public/
 url=` cat config/config.json | grep "url" | sed -r 's/^[^:]*:(.*)$/\1/' | sed 's/\"//g' | sed "s/,//g" | sed 's/ //g'`
 
-singularity run $sdir/python3_env_mako_installed.sif python script/send_mail.py ${url}/${hash}/ ${usr_email} ${original_filename}
+singularity run -B $maindir $sdir/python3_env_mako_installed.sif python $sdir/send_mail.py ${url}/${hash}/ ${usr_email} ${original_filename}

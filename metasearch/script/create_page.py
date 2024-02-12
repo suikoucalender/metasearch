@@ -15,7 +15,7 @@ original_filename = argv[2]
 #DBディレクトリの絶対パス
 dbPath = argv[3]
 
-rankList = ["", ".genus" , ".species"]
+rankList = [""] #, ".genus" , ".species"]
 
 for rank in rankList:
 	rank_with_underbar = rank.replace(".", "_")
