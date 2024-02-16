@@ -17,7 +17,7 @@ set -x
 #dbPath=/usr/local/yoshitake/
 dbPath=$(dirname $(readlink -f $maindir/data/db))
 
-#script/run-silva-cor.sh $newfilename
+script/run-silva-cor.sh $newfilename
 
 #Singularityのイメージがなければ、githubのリリースから取ってくる。ファイルサイズが大きいのでソースコードには含められない。
 if [ ! -e "${sdir}/python3_env_mako_installed.sif" ]; then
@@ -29,10 +29,11 @@ fi
 
 singularity run -B $maindir -B $dbPath $sdir/python3_env_mako_installed.sif python $sdir/create_page.py $newfilename $original_filename $dbPath
 
-for class in "" #.genus .species
-do
-	singularity run -B $maindir $sdir/krona_v2.7.1_cv1.sif ktImportText $maindir/tmp/${hash}/result${class}.kraken -o $maindir/tmp/${hash}/${hash}/krona_out${class}.html
-done
+#for class in "" .genus .species
+#do
+#	singularity run -B $maindir $sdir/krona_v2.7.1_cv1.sif ktImportText $maindir/tmp/${hash}/result${class}.kraken -o $maindir/tmp/${hash}/${hash}/krona_out${class}.html
+#done
+singularity run -B $maindir $sdir/krona_v2.7.1_cv1.sif ktImportText $maindir/tmp/${hash}/result.kraken -o $maindir/tmp/${hash}/${hash}/krona_out.html
 
 cp -r tmp/${hash}/${hash} public/
 url=` cat config/config.json | grep "url" | sed -r 's/^[^:]*:(.*)$/\1/' | sed 's/\"//g' | sed "s/,//g" | sed 's/ //g'`

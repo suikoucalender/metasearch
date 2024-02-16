@@ -1,7 +1,7 @@
 #!/bin/bash
 #$ -S /bin/bash
 #$ -cwd
-#$ -pe def_slot_v251 4
+#$ -pe def_slot_v251 8
 
 source ~/.bashrc
 
