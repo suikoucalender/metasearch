@@ -32,7 +32,8 @@ def createResult(uploaded_f_name, original_filename, rank):
     hash_data = uploaded_f_dirname.replace("tmp/","")
 
     #保存先のHTMLを開く(tmp/Hash値/Hash値/result.html)
-    html_f_out = open(uploaded_f_dirname + "/" + hash_data + "/result" + rank + ".html", "w")
+    #print(uploaded_f_dirname + "/result" + rank + ".html")
+    html_f_out = open(uploaded_f_dirname + "/result" + rank + ".html", "w")
     html_f_out.write(html_content.decode())
 
     html_f_out.close()

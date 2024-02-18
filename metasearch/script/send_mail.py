@@ -34,12 +34,7 @@ original_filename = argv[3] #元のファイル名
 
 message = """This is metasearch.
 Your analysis has been finished.
-You can check your result from """ + result_url + """result.html 
-
-You can check your genus result from """ + result_url + """result.genus.html
-
-You can check your species result from """ + result_url + """result.species.html
-
+You can check your result from """ + result_url + """result.html
 
 
 If you have any question, please ask me.

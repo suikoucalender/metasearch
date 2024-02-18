@@ -11,7 +11,6 @@ def createGraph(uploaded_f_name, dbPath, rank):
     #Queryの組成ファイルを取得
     query_comp_f = open(uploaded_f_name + rank + ".tsv")
 
-    
     #Queryの各組成の量を取得
     query_comp_top, query_comp_all = calc_comp(query_comp_f)
 
@@ -28,14 +27,14 @@ def createGraph(uploaded_f_name, dbPath, rank):
     #全てのオブジェクトに含まれる生物種の一覧を取得(積集合)
     cor_livings = get_livings(cor_comp_object) #相関係数の生物種
     jaccard_livings = get_livings(jaccard_comp_object) #jaccard係数の生物種
-    
+
     #Queryと相関係数に含まれる生物種
     query_cor_livings = query_comp_top + cor_livings
     query_cor_livings = sorted(set(query_cor_livings), key=query_cor_livings.index)
 
     #Queryとjaccard係数に含まれる生物種
     query_jaccard_livings = query_comp_top + jaccard_livings
-    query_jaccard_livings = sorted(set(query_jaccard_livings), key=query_jaccard_livings.index) 
+    query_jaccard_livings = sorted(set(query_jaccard_livings), key=query_jaccard_livings.index)
 
     #Google Chart APIに渡すデータテーブルを作成
     cor_dataTable = createDataTable(query_cor_livings, query_comp_all, cor_comp_object)
@@ -49,16 +48,16 @@ def createGraph(uploaded_f_name, dbPath, rank):
         output_encoding="utf-8",
         encoding_errors="replace"
     )
-    
+
     #tmp/Hash値を取得
     uploaded_f_dirname = os.path.dirname(uploaded_f_name)
     #Hash値を取得
     hash_data = uploaded_f_dirname.replace("tmp/","")
 
     #保存先のHTMLを開く(tmp/Hash値/Hash値/graphs_cor.html)
-    cor_html_f_out = open(uploaded_f_dirname + "/" + hash_data + "/graphs_cor" + rank + ".html", "w")
-    jaccard_html_f_out = open(uploaded_f_dirname + "/" + hash_data + "/graphs_jaccard" + rank + ".html", "w")
-    
+    cor_html_f_out = open(uploaded_f_dirname + "/graphs_cor" + rank + ".html", "w")
+    jaccard_html_f_out = open(uploaded_f_dirname + "/graphs_jaccard" + rank + ".html", "w")
+
     #HTMLテンプレートにRenderする
     renderHtml(t, cor_dataTable, cor_html_f_out)
     renderHtml(t, jaccard_dataTable, jaccard_html_f_out)
@@ -75,15 +74,15 @@ def get_comp(result_f, dbPath):
     for row in rows:
         #SRAのIDを取得
         sra_id = row.split()[0].replace(".fastq","")
-        
+
         #SRAのIDに対応する組成ファイルのパスを取得
         try:
             # comp_f_path = glob.glob("/home/yoshitake/yoshitake/db/SraId_*/" + sra_id + ".fastq.fasta.ssu.blast.filtered.name.lca.cnt2.input")[0]
-            comp_f_path = glob.glob(dbPath + "SraId_*/" + sra_id + ".fastq.fasta.ssu.blast.filtered.name.lca.cnt2.input")[0]
+            comp_f_path = glob.glob(dbPath + "/*/" + sra_id + ".input")[0]
             print(comp_f_path)
         except:
             continue
-        
+
         #SRAのIDに対応する組成ファイルを取得
         comp_f = open(comp_f_path)
 
@@ -94,7 +93,7 @@ def get_comp(result_f, dbPath):
         comp_object[sra_id] = [comp_top, comp_all]
 
         comp_f.close()
-    
+
     return comp_object
 
 #組成のオブジェクトを取得するための関数
@@ -132,7 +131,7 @@ def get_livings(comp_object):
 def createDataTable(livings,query_comp_all,comp_object):
     dataTable = [] #Google Chart APIに渡すデータテーブル
     dataTable.append([""] + livings + ["others"]) #データテーブルに生物種を追加
-    
+
     #各生物種に関して、Queryの組成にどれだけ含まれているかを算出。(含まない場合は0)
     query_data = []
     query_others = query_comp_all["all"]

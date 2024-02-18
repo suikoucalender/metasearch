@@ -1,19 +1,18 @@
 #!/bin/bash
 
 #tmp/hash値/hash値(.gz)
-newfilename=$1
-hash=$2
-original_filename=$3
-usr_email=$4
+newfilename=$1 #tmp/cf5a956d1de00aaea36b87346b21b4e8/cf5a956d1de00aaea36b87346b21b4e8.fq
+hash=$2 #cf5a956d1de00aaea36b87346b21b4e8
+original_filename=$3 #y2022-group3-fish-16S-Kabayakisantaro.fq
+usr_email=$4 #g.ecc.u-tokyo.ac.jp
 
 sdir=$(dirname `readlink -f $0`)
 maindir=$(dirname "$sdir")
-#source "$sdir"/settings.sh
 source ~/.bashrc
 
 set -x
 
-#DBディレクトリが格納されているディレクトリの絶対パス(必ず'/'を入れる)
+#DBディレクトリが格納されているディレクトリの絶対パス
 #dbPath=/usr/local/yoshitake/
 dbPath=$(dirname $(readlink -f $maindir/data/db))
 
@@ -33,9 +32,9 @@ singularity run -B $maindir -B $dbPath $sdir/python3_env_mako_installed.sif pyth
 #do
 #	singularity run -B $maindir $sdir/krona_v2.7.1_cv1.sif ktImportText $maindir/tmp/${hash}/result${class}.kraken -o $maindir/tmp/${hash}/${hash}/krona_out${class}.html
 #done
-singularity run -B $maindir $sdir/krona_v2.7.1_cv1.sif ktImportText $maindir/tmp/${hash}/result.kraken -o $maindir/tmp/${hash}/${hash}/krona_out.html
+singularity run -B $maindir $sdir/krona_v2.7.1_cv1.sif ktImportText $maindir/tmp/${hash}/result.kraken -o $maindir/tmp/${hash}/krona_out.html
 
-cp -r tmp/${hash}/${hash} public/
+cp -r tmp/${hash} public/
 url=` cat config/config.json | grep "url" | sed -r 's/^[^:]*:(.*)$/\1/' | sed 's/\"//g' | sed "s/,//g" | sed 's/ //g'`
 
 singularity run -B $maindir $sdir/python3_env_mako_installed.sif python $sdir/send_mail.py ${url}/${hash}/ ${usr_email} ${original_filename}
