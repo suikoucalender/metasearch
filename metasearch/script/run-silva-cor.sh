@@ -35,6 +35,7 @@ top=0.99
 set -eux
 set -o pipefail
 
+blastdb_path="$sdir"/../data/blastdb/mergedDB.maskadaptors.fa
 real_blastdb_path=`readlink -f "$blastdb_path"`
 blastdb_dir=$(dirname "$real_blastdb_path")
 $singularity_path exec -B ${tempdir} -B "$blastdb_dir" $sdir/ncbi_blast_2.13.0.sif blastn -num_threads 8 -db ${real_blastdb_path} -query ${tempdir}/input/input.fa -outfmt 6 -max_target_seqs 500 > $tempdir/blast.txt
