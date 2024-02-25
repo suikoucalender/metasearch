@@ -168,8 +168,9 @@ func main() {
                 aflog:=[]float64{}
                 bflog:=[]float64{}
                 for i := range va1{
-                    aflog = append(aflog, math.Log(float64(va1[i])+0.25)-math.Log(0.25))
-                    bflog = append(bflog, math.Log(float64(va2[i])+0.25)-math.Log(0.25))
+                    //fmt.Println(va1[i], (math.Log(float64(va1[i])+0.25)-math.Log(0.25))/math.Log(2))
+                    aflog = append(aflog, (math.Log(float64(va1[i])+0.25)-math.Log(0.25))/math.Log(2))
+                    bflog = append(bflog, (math.Log(float64(va2[i])+0.25)-math.Log(0.25))/math.Log(2))
                 }
                 plog:=Pearson(aflog, bflog)
 
@@ -221,8 +222,8 @@ func main() {
                 aflog:=[]float64{}
                 bflog:=[]float64{}
                 for i := range va1{
-                    aflog = append(aflog, math.Log(float64(va1[i])+0.25)-math.Log(0.25))
-                    bflog = append(bflog, math.Log(float64(va2[i])+0.25)-math.Log(0.25))
+                    aflog = append(aflog, (math.Log(float64(va1[i])+0.25)-math.Log(0.25))/math.Log(2))
+                    bflog = append(bflog, (math.Log(float64(va2[i])+0.25)-math.Log(0.25))/math.Log(2))
                 }
                 plog:=Pearson(aflog, bflog)
 
