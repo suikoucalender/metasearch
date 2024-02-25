@@ -3,7 +3,10 @@
 if [ "$1" = "" ]; then echo $0 "<input.fastq(.gz)>"; exit 1; fi
 
 echo "CMD: $0 $*"
-n=40000 #使用するリード数x4
+n=40000 #最大で使用するリード数x4
+n1=300 #最初に使用するリード数
+nmax=100000 #最大で使用するリード数
+min_hit=100
 
 work=$PWD
 pid=$$
@@ -21,10 +24,16 @@ cd $tempdir
 
 #入力ファイルがgz圧縮されているか調べて圧縮されていたらzcatそうでなければcatを使う
 if [ `echo "$input"|grep [.]gz$|wc -l` = 1 ]; then
-    zcat "$input"|head -n $n | awk 'NR%4==1{a=substr($1,2); if(a!~"/[1-4]$/"){a=a"/1"}; print ">"a} NR%4==2{print $0}' > input/input.fa
+ cmd=zcat
+#    zcat "$input"|head -n $n | awk 'NR%4==1{a=substr($1,2); if(a!~"/[1-4]$/"){a=a"/1"}; print ">"a} NR%4==2{print $0}' > input/input.fa
 else
-    cat "$input"|head -n $n | awk 'NR%4==1{a=substr($1,2); if(a!~"/[1-4]$/"){a=a"/1"}; print ">"a} NR%4==2{print $0}' > input/input.fa
+ cmd=cat
+#    cat "$input"|head -n $n | awk 'NR%4==1{a=substr($1,2); if(a!~"/[1-4]$/"){a=a"/1"}; print ">"a} NR%4==2{print $0}' > input/input.fa
 fi
+#ファイルが途中で切れていて3行目以降がない行はスキップ
+#リード名の最後に/1などが付いていないと後々困るのでついていなければつける
+$cmd "$input"|paste - - - -|awk -F'\t' 'NF>2'|shuf|head -n $n1|
+ awk -F'\t' '{split($1,arr," "); a=substr(arr[1],2); if(a!~"/[1-4]$/"){a=a"/1"}; print ">"a; print $2}' > input/input1.fa
 
 #BLAST->LCA解析を実行
 #"$sdir"/metagenome~silva_SSU+LSU -c 8 -m 32 -d 50 -t 0.99 input
@@ -38,7 +47,21 @@ set -o pipefail
 blastdb_path="$sdir"/../data/blastdb/mergedDB.maskadaptors.fa
 real_blastdb_path=`readlink -f "$blastdb_path"`
 blastdb_dir=$(dirname "$real_blastdb_path")
-$singularity_path exec -B ${tempdir} -B "$blastdb_dir" $sdir/ncbi_blast_2.13.0.sif blastn -num_threads 8 -db ${real_blastdb_path} -query ${tempdir}/input/input.fa -outfmt 6 -max_target_seqs 500 > $tempdir/blast.txt
+$singularity_path exec -B ${tempdir} -B "$blastdb_dir" $sdir/ncbi_blast_2.13.0.sif blastn -num_threads 8 -db ${real_blastdb_path} -query ${tempdir}/input/input1.fa -outfmt 6 -max_target_seqs 500 > $tempdir/blast.txt
+
+hit=`cat $tempdir/blast.txt | awk -F'\t' '$12>'$bitscore'{split($1,arr,"/"); print arr[1]}'|sort|uniq|wc -l`
+#hit数が規定値以下の場合、リード数を増やしてもう一度
+if [ $hit -lt $min_hit ]; then
+ if [ $hit = 0 ];then
+  n2=$nmax
+ else
+  n2=`expr $n1 '*' $min_hit / $hit`
+ fi
+ $cmd "$input"|paste - - - -|awk -F'\t' 'NF>2'|shuf|head -n $n2|
+  awk -F'\t' '{split($1,arr," "); a=substr(arr[1],2); if(a!~"/[1-4]$/"){a=a"/1"}; print ">"a; print $2}' > input/input2.fa
+ $singularity_path exec -B ${tempdir} -B "$blastdb_dir" $sdir/ncbi_blast_2.13.0.sif blastn -num_threads 8 -db ${real_blastdb_path} -query ${tempdir}/input/input2.fa -outfmt 6 -max_target_seqs 500 > $tempdir/blast.txt
+fi
+
 cat $tempdir/blast.txt |
  awk -F'\t' '{split($1,arr,"/");
   if(arr[1]!=old){for(hit in data){temp[hit]=data[hit]["1"]+data[hit]["2"]}; PROCINFO["sorted_in"]="@val_num_desc"; for(hit in temp){print old"\t"hit"\t"temp[hit]}; old=arr[1]; delete data; delete temp};

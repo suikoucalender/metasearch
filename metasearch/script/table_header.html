@@ -1,0 +1,110 @@
+<html>
+<head>
+<style type="text/css">
+table{
+  border-collapse: collapse;
+  border-spacing: 0;
+  width: 100%;
+}
+
+table tr{
+#  border-bottom: solid 1px #eee;
+  cursor: pointer;
+}
+
+table tr:hover{
+  background-color: #c8e4ff;
+}
+
+table th,table td{
+#  text-align: center;
+#  width: 20%;
+#  padding: 15px 0;
+ border: 1px solid #eee;
+}
+
+#table td.icon {
+#    background-size: 45px;
+#    background-position: left 5px center;
+#    background-repeat: no-repeat;
+#    padding-left: 0px;
+#}
+
+.tablesorter-header-inner {
+    display: inline-block;
+}
+
+.tablesorter-headerUnSorted:after 
+{
+  position: relative;
+  margin-left: 10px;
+  content: '↕';
+#  content: '\f0dc';
+  color: #6bb6ff;
+  font-size: 1.2rem;
+#  font-family: "Font Awesome 5 Free";
+  font-weight: 900;
+  line-height: 1.4;
+}
+
+.tablesorter-headerAsc:after 
+{
+  position: relative;
+  margin-left: 10px;
+  content: '↓';
+#  content: '\f163';
+  color: #6bb6ff;
+  font-size: 1.2rem;
+#  font-family: "Font Awesome 5 Free";
+  font-weight: 900;
+  line-height: 1.4;
+}
+
+.tablesorter-headerDesc:after 
+{
+  position: relative;
+  margin-left: 10px;
+  content: '↑';
+#  content: '\f886';
+  color: #6bb6ff;
+  font-size: 1.2rem;
+#  font-family: "Font Awesome 5 Free";
+  font-weight: 900;
+  line-height: 1.4;
+}
+
+@media screen and (max-width: 640px) {
+  .scroll {
+    overflow-x: auto;
+  }
+  #sorter {
+    min-width: 640px;
+    margin: 0 10px 50px;
+  }
+}
+
+.tablesorter-headerUnSorted:first-child:after {
+  content:none;
+}
+
+</style>
+<script src="https://kit.fontawesome.com/fd14973375.js" crossorigin="anonymous"></script>
+<script
+  src="https://code.jquery.com/jquery-2.2.4.js"
+  integrity="sha256-iT6Q9iMJYuQiMWNd9lDyBUStIq/8PuOW33aOqmvFpqI="
+  crossorigin="anonymous"></script>
+<script src="../jquery.table_colorscale.js"></script>
+<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/jquery.tablesorter/2.31.0/js/jquery.tablesorter.min.js"></script>
+<script>
+$(document).ready(function(){
+  $('#test > tbody > tr > :nth-child(2), #test > tbody > tr > :nth-child(3), #test > tbody > tr > :nth-child(4), #test > tbody > tr > :nth-child(5), #test > tbody > tr > :nth-child(6), #test > tbody > tr > :nth-child(7), #test > tbody > tr > :nth-child(8), #test > tbody > tr > :nth-child(9), #test > tbody > tr > :nth-child(10), #test > tbody > tr > :nth-child(11), #test > tbody > tr > :nth-child(12), #test > tbody > tr > :nth-child(13)').tableColorScale({type: 'databar'});
+  $('#test').tablesorter({
+     headers: {
+       0: {sorter:false}
+     }
+  });
+});
+</script>
+
+</head>
+<body>
