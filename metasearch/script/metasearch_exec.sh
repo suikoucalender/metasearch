@@ -16,7 +16,7 @@ set -x
 #dbPath=/usr/local/yoshitake/
 dbPath=$(dirname $(readlink -f $maindir/data/db))
 
-#script/run-silva-cor.sh $newfilename
+script/run-silva-cor.sh $newfilename
 
 #Singularityのイメージがなければ、githubのリリースから取ってくる。ファイルサイズが大きいのでソースコードには含められない。
 if [ ! -e "${sdir}/python3_env_mako_installed.sif" ]; then
@@ -27,7 +27,7 @@ if [ ! -e "${sdir}/krona_v2.7.1_cv1.sif" ]; then
 fi
 
 echo "<html><body>" > $maindir/tmp/${hash}/result.html
-for k in correlation correlation.log weighted_jaccard weighted_jaccard.log jaccard correlation.fullnodes correlation.fullnodes.log weighted_jaccard.fullnodes weighted_jaccard.fullnodes.log jaccard.fullnodes; do
+for k in correlation correlation.log correlation.fullnodes correlation.fullnodes.log weighted_jaccard weighted_jaccard.log weighted_jaccard.fullnodes weighted_jaccard.fullnodes.log jaccard jaccard.fullnodes; do
 
 echo "<a href='$k.output.html'>$k</a><br>" >> $maindir/tmp/${hash}/result.html
 #類似度スコア＆サンプル名など
