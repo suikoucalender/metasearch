@@ -19,6 +19,10 @@ input=`readlink -f "$1"` #$1=tmp/cf5a956d1de00aaea36b87346b21b4e8/cf5a956d1de00a
 sdir=$(dirname `readlink -f $0`)
 source "$sdir"/config.sh
 
+if [ ! -e "${sdir}/ncbi_blast_2.13.0.sif" ]; then
+ wget -O "${sdir}/ncbi_blast_2.13.0.sif" https://github.com/suikoucalender/mitosearch_related_files/releases/download/0.01/ncbi_blast_2.13.0.sif
+fi
+
 mkdir -p $tempdir/input
 cd $tempdir
 
