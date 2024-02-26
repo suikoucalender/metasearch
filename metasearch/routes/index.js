@@ -7,6 +7,7 @@ var multer = require("multer");
 var upload = multer({ dest: "tmp/" });
 var { execSync } = require('child_process');
 require('date-utils');
+var sqlite3 = require('sqlite3').verbose();
 
 /* GET home page. */
 router.get('/', function (req, res, next) {
@@ -66,9 +67,7 @@ router.post('/upload', upload.single('file'), function (req, res, next) {
         if (err) throw err;
     });
 
-    //吉武先生のスクリプトを実行,HTMLを作成
-    //execSync("qsub -e ./qsub_log/e." + hash + " -o ./qsub_log/o." + hash + " -cwd -pe def_slot 4 -j y -N 'metasearch' script/metasearch_exec.sh " + newfilename + " " + hash + " " + original_filename + " " + email);
-    //execSync("/opt/sge/bin/lx-amd64/qsub -e ./qsub_log/e." + hash + " -o ./qsub_log/o." + hash + " -j y -N metasearch script/qsubsh4 script/metasearch_exec.sh " + newfilename + " " + hash + " " + original_filename + " " + email);
+    //解析スクリプトを実行,HTMLを作成
     execSync("script/run-qsub.sh "+hash+" "+newfilename+" "+original_filename+" "+email);
     //レスポンスを返す(これがないとPOSTが上手くいかない)
     res.send("uploaded");
@@ -88,6 +87,88 @@ router.get('/help', function (req, res, next) {
 
 router.get('/contact', function (req, res, next) {
     res.render('contact');
+});
+
+router.get('/species', function (req, res, next) {
+  // GETパラメータから`name`の値を取得
+  var aValue = req.query.name;
+  var db = new sqlite3.Database('data/species.db');
+  // SQLiteを使って`name`の値に基づいてデータベースを検索
+  db.all("SELECT * FROM data WHERE sp_name = ? ORDER BY percent DESC LIMIT 1000", [aValue], function(err, rows) {
+    if (err) {
+      res.status(500).send("データベースエラー");
+      return console.error(err.message);
+    }
+
+    // IDに対応する情報を検索して配列に保存
+    const srrNames = rows.map(row => row.srr_name);
+    const infoFilePath = 'data/sra_info.txt';
+
+    // infoファイルを読み込む
+    fs.readFile(infoFilePath, 'utf8', (err, data) => {
+      if (err) {
+        return res.status(500).send("リストファイルを読み込めませんでした。");
+      }
+      const dataLines = data.trim().split('\n');
+      const infoData = dataLines.map(line => line.split('\t')); //SRX, SRR, exp name, organism, study name
+      const rowplus = rows.map(item => {
+        const found = infoData.find(element => element[1] === item.srr_name);
+        //console.log(found);
+        if(found !== undefined){
+          item.expname = found[2];
+          item.organism = found[3];
+          item.studyname = found[4];
+        }
+        return item;
+      });
+      res.render('species', { results: rowplus, key: req.query.name });
+    });
+  });
+});
+
+router.get('/srr', function (req, res, next) {
+  const requestedFile = req.query.id; // GETパラメータからファイル名を取得
+  const listFilePath = 'data/input.list'; // ファイルリストのパス
+
+  // ファイルリストを読み込む
+  fs.readFile(listFilePath, 'utf8', (err, data) => {
+    if (err) {
+      return res.status(500).send("リストファイルを読み込めませんでした。");
+    }
+
+    // ファイルリストからファイルのパスを検索
+    const lines = data.split('\n');
+    const fileEntry = lines.find(line => line.startsWith(requestedFile + '\t'));
+    if (!fileEntry) {
+      return res.status(404).send("ファイルがリストに見つかりません。");
+    }
+
+    // ファイルのパスを抽出して応答する
+    const filePath = 'data/'+fileEntry.split('\t')[1];
+    //console.log(filePath);
+
+    fs.readFile(filePath, 'utf8', (err, data) => {
+      if (err) {
+        return res.status(500).send("ファイルを読み込めませんでした。");
+      }
+      // テキストファイルの内容をPugテンプレートに渡してレンダリング
+
+      // データを行に分割し、最初の行（ヘッダー）を除外
+      const rows = data.trim().split('\n').slice(1);
+
+      // 各行をタブで分割してオブジェクトの配列に変換
+      const tableData = rows.map(row => {
+        const columns = row.split('\t');
+        return {
+          name: columns[0],
+          abundance: columns[1],
+          // 必要に応じて他の列も追加
+        };
+      });
+
+      res.render('srr', { tableData: tableData, key: req.query.id});
+    });
+  });
 });
 
 module.exports = router;

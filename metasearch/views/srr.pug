@@ -1,0 +1,21 @@
+extends layout
+
+block content
+    .full-page-result
+        header
+            .head-content
+                h1 #{key}
+        main
+            .main-content-result
+                table#myTable
+                   thead
+                       tr
+                           th Species
+                           th Abundance
+                   tbody
+                       each item in tableData
+                           tr
+                             td 
+                               a(href='./species?name='+item.name) #{item.name}
+                             td= item.abundance
+

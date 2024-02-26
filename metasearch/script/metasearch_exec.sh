@@ -16,7 +16,7 @@ set -x
 #dbPath=/usr/local/yoshitake/
 dbPath=$(dirname $(readlink -f $maindir/data/db))
 
-script/run-silva-cor.sh $newfilename
+#script/run-silva-cor.sh $newfilename
 
 #Singularityのイメージがなければ、githubのリリースから取ってくる。ファイルサイズが大きいのでソースコードには含められない。
 if [ ! -e "${sdir}/python3_env_mako_installed.sif" ]; then
@@ -68,7 +68,28 @@ echo "<div class='freq'><h3>Abundance</h3>" >> tmp/$hash/$k.output.html
 cat tmp/$hash/$k.output.merge.sort.txt |awk -F'\t' '
  BEGIN{print "<table id=\"test\">"}
  NR==1{print " <thead><tr>"; for(i=1;i<=NF;i++){print "  <th>"$i"</th>"}; print " </tr></thead>"; print " <tbody>"}
- NR>1{ori=$1; n=split($1,arr,";"); if(n>5){$1=arr[1]";...;"arr[length(arr)-2]";"arr[length(arr)-1]";"arr[length(arr)]}; print "  <tr>"; print "   <td title=\""ori"\">"$1"</td>"; for(i=2;i<=NF;i++){print "   <td>"$i"</td>"}; print "  </tr>"}
+ NR>1{
+  ori=$1; n=split($1,arr,";");
+  delete links
+  taxpath[1]=arr[1]
+  for(i=2;i<=length(arr);i++){
+   taxpath[i]=taxpath[i-1]";"arr[i]
+  }
+  if(n>5){
+   res="<a href='"'"'../species?name="taxpath[1]"'"'"'>"arr[1]"</a>"
+   res=res";...;<a href='"'"'../species?name="taxpath[length(arr)-2]"'"'"'>"arr[length(arr)-2]"</a>"
+   res=res";<a href='"'"'../species?name="taxpath[length(arr)-1]"'"'"'>"arr[length(arr)-1]"</a>"
+   res=res";<a href='"'"'../species?name="taxpath[length(arr)]"'"'"'>"arr[length(arr)]"</a>"
+  }else{
+   res="<a href='"'"'../species?name="taxpath[1]"'"'"'>"arr[1]"</a>"
+   for(i=2;i<=length(arr);i++){
+    res=res";<a href='"'"'../species?name="taxpath[i]"'"'"'>"arr[i]"</a>"
+   }
+  }
+  print "  <tr>";
+  print "   <td title=\""ori"\">"res"</td>";
+  for(i=2;i<=NF;i++){print "   <td>"$i"</td>"}; print "  </tr>"
+ }
  END{print " </tbody>"; print "</table></body></html>"}' >> tmp/$hash/$k.output.html
 echo "</div>" >> tmp/$hash/$k.output.html #class=freqの閉じ
 echo "</div></main>" >> tmp/$hash/$k.output.html #mainの閉じ

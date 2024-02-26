@@ -1,0 +1,24 @@
+extends layout
+
+block content
+    .full-page-result
+        header
+                h1 #{key}
+        main
+                table#myTable
+                   thead
+                       tr
+                           th SRR
+                           th percent
+                           th Experiment name
+                           th Organism
+                           th Study name
+                   tbody
+                         each result in results
+                           tr
+                             td
+                               a(href='./srr?id='+result.srr_name) #{result.srr_name}
+                             td= result.percent
+                             td= result.expname
+                             td= result.organism
+                             td= result.studyname

@@ -10,6 +10,11 @@ body {
     background: #f4f5f6;
 }
 
+.full-page-result{
+    width: 100vw;
+    background: #f4f5f6;
+}
+
 header {
     background-color: #2d3e43;
     color: #ffffff;
@@ -62,6 +67,16 @@ main{
 .main-content {
     width: 1000px;
     height: 350px;
+    background: #fff;
+    margin: 0 auto;
+    padding: 10px 20px;
+    border-radius: 8px;
+    border-top: 4px solid #6c777a;
+    border-bottom: 4px solid #6c777a;
+}
+
+.main-content-result {
+    width: 1000px;
     background: #fff;
     margin: 0 auto;
     padding: 10px 20px;
@@ -155,4 +170,9 @@ main{
 .loaded {
     opacity: 0;
     visibility: hidden;
+}
+
+#myTable, #myTable th, #myTable td {
+  border: 1px solid black;
+  border-collapse: collapse;
 }
