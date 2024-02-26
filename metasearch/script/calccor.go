@@ -95,26 +95,27 @@ func main() {
         return
     }
 
-    _, a1, afp1 := userCsvNewReader(inputtsv)  //userCsvNewReaderは一行目のヘッダーからサンプルの名前と、二行目以降の種名：リード数をマップに詰めて返す
-    delete(a1,"No Hit")
-    delete(afp1,"No Hit")
-    if len(a1)==0{
+    _, atmp1 := userCsvNewReader(inputtsv)  //userCsvNewReaderは一行目のヘッダーからサンプルの名前と、二行目以降の種名：リード数をマップに詰めて返す
+    delete(atmp1,"No Hit")
+    if len(atmp1)==0{
         fmt.Fprintf(os.Stderr, "No Hit\n")
         os.Exit(1)
     }
+    a1:=normalizeTo100(atmp1)
+    afp1:=generateFullTaxonomyMap(a1)
     //fmt.Println(a1)
     var wg sync.WaitGroup
     res := make(chan int, num_threads)
     list := List{}
     listlog := List{}
-    list_unifrac := List{}
+    list_jaccard := List{}
     list_weighted_jaccard := List{}
     list_weighted_jaccardlog := List{}
     listfp := List{}
     listfplog := List{}
-    list_unifracfp := List{}
+    list_jaccardfp := List{}
     list_weighted_jaccardfp := List{}
-    list_weighted_jaccardlogfp := List{}
+    list_weighted_jaccardfplog := List{}
 
     paths:=dirwalk(inputdir)
     for _, path := range paths {
@@ -128,114 +129,49 @@ func main() {
                 wg.Done()
             }()
             dbcont:=useIoutilReadFile(fname)  //ファイルを開いて文字列型で取得
-            fn2s, a2s, a2fps:=splitCsv(dbcont) //1まとめの文字列をSRRごとに分けて連想配列として返す
-            for i, a2 := range a2s {
+            fn2s, a2s:=splitCsv(dbcont) //1まとめの文字列をSRRごとに分けて連想配列として返す
+            for i, atmp2 := range a2s {
                 //fmt.Println(i)
                 fn2 := fn2s[i]
                 //va2:=values(a2)
-                delete(a2,"No Hit")
-                if len(a2)==0{
+                delete(atmp2,"No Hit")
+                if len(atmp2)==0{
                     continue
                 }
-                va1:=[]int{}  //int配列の初期化
-                va2:=[]int{}
-                //入力ファイルa1側とDB側a2でそれぞれにしか値がない場合に反対側に0を加える処理
-                for k1, v1 := range a1 {
-                    va1 = append(va1, v1)
-                    if v2, ok := a2[k1]; ok{
-                        va2 = append(va2, v2)
-                    }else{
-                        va2 = append(va2, 0)
-                    }
-                }
-                for k2, v2 := range a2 {
-                    if _, ok := a1[k2]; !ok{
-                        va1 = append(va1, 0)
-                        va2 = append(va2, v2)
-                    }
-                }
-                //fmt.Println(fn2,unifrac(a1,a2))
+                a2:=normalizeTo100(atmp2)
+                afp2:=generateFullTaxonomyMap(a2)
 
-                af:=[]float64{}
-                bf:=[]float64{}
-                for i := range va1{
-                    af = append(af, float64(va1[i]))
-                    bf = append(bf, float64(va2[i]))
-                }
-                p:=Pearson(af, bf)
-                //fmt.Println(fn2,p,len(va1),len(va2))
+                va1, va2:=fillWithZero(a1, a2)
+                vafp1, vafp2:=fillWithZero(afp1, afp2)
 
-                aflog:=[]float64{}
-                bflog:=[]float64{}
-                for i := range va1{
-                    //fmt.Println(va1[i], (math.Log(float64(va1[i])+0.25)-math.Log(0.25))/math.Log(2))
-                    aflog = append(aflog, (math.Log(float64(va1[i])+0.25)-math.Log(0.25))/math.Log(2))
-                    bflog = append(bflog, (math.Log(float64(va2[i])+0.25)-math.Log(0.25))/math.Log(2))
-                }
-                plog:=Pearson(aflog, bflog)
+                va1log, va2log:=return_log_value(va1, va2)
+                vafp1log, vafp2log:=return_log_value(vafp1, vafp2)
 
-                wj:=weighted_jaccard(af, bf)
-                wjlog:=weighted_jaccard(aflog, bflog)
+                p:=Pearson(va1, va2)
+                plog:=Pearson(va1log, va2log)
+                pfp:=Pearson(vafp1, vafp2)
+                pfplog:=Pearson(vafp1log, vafp2log)
+
+                wj:=weighted_jaccard(va1, va2)
+                wjlog:=weighted_jaccard(va1log, va2log)
+                wjfp:=weighted_jaccard(vafp1, vafp2)
+                wjfplog:=weighted_jaccard(vafp1log, vafp2log)
+
+                jac:=jaccard(a1,a2)
+                jacfp:=jaccard(afp1,afp2)
 
                 mutex.Lock()
-                //list=append(list,Entry{fn2,p})
                 list=add_to_list(fn2, p, list, num_hits) //num_hitsは出力ヒット数
                 listlog=add_to_list(fn2, plog, listlog, num_hits)
-                //list_unifrac=append(list_unifrac,Entry{fn2,unifrac(a1,a2)})
-                //list_unifrac=add_to_list_unifrac(fn2, unifrac(a1,a2), list_unifrac, num_hits)
-                list_unifrac=add_to_list_unifrac(fn2, jaccard(a1,a2), list_unifrac, num_hits)
+                listfp=add_to_list(fn2, pfp, listfp, num_hits)
+                listfplog=add_to_list(fn2, pfplog, listfplog, num_hits)
                 list_weighted_jaccard=add_to_list(fn2, wj, list_weighted_jaccard, num_hits)
                 list_weighted_jaccardlog=add_to_list(fn2, wjlog, list_weighted_jaccardlog, num_hits)
-                mutex.Unlock()
-            }
-            for i, afp2 := range a2fps {
-                fn2 := fn2s[i]
-                delete(afp2,"No Hit")
-                if len(afp2)==0{
-                    continue
-                }
-                va1:=[]int{}  //int配列の初期化
-                va2:=[]int{}
-                //入力ファイルa1側とDB側a2でそれぞれにしか値がない場合に反対側に0を加える処理
-                for k1, v1 := range afp1 {
-                    va1 = append(va1, v1)
-                    if v2, ok := afp2[k1]; ok{
-                        va2 = append(va2, v2)
-                    }else{
-                        va2 = append(va2, 0)
-                    }
-                }
-                for k2, v2 := range afp2 {
-                    if _, ok := afp1[k2]; !ok{
-                        va1 = append(va1, 0)
-                        va2 = append(va2, v2)
-                    }
-                }
-                af:=[]float64{}
-                bf:=[]float64{}
-                for i := range va1{
-                    af = append(af, float64(va1[i]))
-                    bf = append(bf, float64(va2[i]))
-                }
-                p:=Pearson(af, bf)
+                list_weighted_jaccardfp=add_to_list(fn2, wjfp, list_weighted_jaccardfp, num_hits)
+                list_weighted_jaccardfplog=add_to_list(fn2, wjfplog, list_weighted_jaccardfplog, num_hits)
+                list_jaccard=add_to_list(fn2, jac, list_jaccard, num_hits)
+                list_jaccardfp=add_to_list(fn2, jacfp, list_jaccardfp, num_hits)
 
-                aflog:=[]float64{}
-                bflog:=[]float64{}
-                for i := range va1{
-                    aflog = append(aflog, (math.Log(float64(va1[i])+0.25)-math.Log(0.25))/math.Log(2))
-                    bflog = append(bflog, (math.Log(float64(va2[i])+0.25)-math.Log(0.25))/math.Log(2))
-                }
-                plog:=Pearson(aflog, bflog)
-
-                wj:=weighted_jaccard(af, bf)
-                wjlog:=weighted_jaccard(aflog, bflog)
-
-                mutex.Lock()
-                listfp=add_to_list(fn2, p, listfp, num_hits)
-                listfplog=add_to_list(fn2, plog, listfplog, num_hits)
-                list_unifracfp=add_to_list_unifrac(fn2, jaccard(afp1,afp2), list_unifracfp, num_hits)
-                list_weighted_jaccardfp=add_to_list(fn2, wj, list_weighted_jaccardfp, num_hits)
-                list_weighted_jaccardlogfp=add_to_list(fn2, wjlog, list_weighted_jaccardlogfp, num_hits)
                 mutex.Unlock()
             }
         }(path)
@@ -246,40 +182,24 @@ func main() {
     save_list_to_file(list_weighted_jaccard, inputtsv+".result.weighted_jaccard", num_hits)
     save_list_to_file(list_weighted_jaccardlog, inputtsv+".result.weighted_jaccard.log", num_hits)
 
-    //fmt.Println("")
-    sort.Slice(list_unifrac,func(i, j int) bool { return list_unifrac[i].value < list_unifrac[j].value })
-    b2 := []byte{}
-    for i, pk := range list_unifrac{
-        if i >= num_hits {break}
-        //fmt.Println(pk.name+"\t"+strconv.FormatFloat(pk.value, 'f', -1, 64))
-        ll := []byte(pk.name+"\t"+strconv.FormatFloat(pk.value, 'f', -1, 64)+"\n")
-        for _, l := range ll {b2 = append(b2, l)}
-    }
-    //errw2 := ioutil.WriteFile(inputtsv+".result.unifrac", b2, 0666)
-    errw2 := ioutil.WriteFile(inputtsv+".result.jaccard", b2, 0666)
-    if errw2 != nil {
-        fmt.Println(os.Stderr, errw2)
-           os.Exit(1)
-    }
-
     save_list_to_file(listfp, inputtsv+".result.correlation.fullnodes", num_hits)
     save_list_to_file(listfplog, inputtsv+".result.correlation.fullnodes.log", num_hits)
     save_list_to_file(list_weighted_jaccardfp, inputtsv+".result.weighted_jaccard.fullnodes", num_hits)
-    save_list_to_file(list_weighted_jaccardlogfp, inputtsv+".result.weighted_jaccard.fullnodes.log", num_hits)
+    save_list_to_file(list_weighted_jaccardfplog, inputtsv+".result.weighted_jaccard.fullnodes.log", num_hits)
 
-    sort.Slice(list_unifracfp,func(i, j int) bool { return list_unifracfp[i].value < list_unifracfp[j].value })
-    bfp2 := []byte{}
-    for i, pk := range list_unifracfp{
-        if i >= num_hits {break}
-        ll := []byte(pk.name+"\t"+strconv.FormatFloat(pk.value, 'f', -1, 64)+"\n")
-        for _, l := range ll {bfp2 = append(bfp2, l)}
-    }
-    errwfp2 := ioutil.WriteFile(inputtsv+".result.jaccard.fullnodes", bfp2, 0666)
-    if errwfp2 != nil {
-        fmt.Println(os.Stderr, errwfp2)
-           os.Exit(1)
-    }
+    save_list_to_file(list_jaccard, inputtsv+".result.jaccard", num_hits)
+    save_list_to_file(list_jaccardfp, inputtsv+".result.jaccard.fullnodes", num_hits)
 
+}
+
+func return_log_value(a1 []float64, a2 []float64) ([]float64, []float64){
+                a1log:=[]float64{}
+                a2log:=[]float64{}
+                for i := range a1{
+                    a1log = append(a1log, (math.Log(float64(a1[i])+0.25)-math.Log(0.25))/math.Log(2))
+                    a2log = append(a2log, (math.Log(float64(a2[i])+0.25)-math.Log(0.25))/math.Log(2))
+                }
+                return a1log, a2log
 }
 
 func save_list_to_file(list List, filename string, num_hits int){
@@ -341,7 +261,7 @@ func weighted_jaccard(x []float64, y []float64) (float64){
     }
 }
 
-func jaccard(x map[string]int, y map[string]int) (float64){
+func jaccard(x map[string]float64, y map[string]float64) (float64){
     xsum := 0.0
     ysum := 0.0
     for _, xval := range x{
@@ -367,7 +287,7 @@ func jaccard(x map[string]int, y map[string]int) (float64){
             sy++
         }
     }
-    return 1-(sxy/(sx+sy-sxy))
+    return sxy/(sx+sy-sxy)
 }
 
 //https://mothur.org/wiki/weighted_unifrac_algorithm/を参考にしたけど、結局X, Y2つの微生物叢のツリーのリード相対量を引いたツリーを作って、エッジｘ2つのノードの値の足し算/2をノード総当りで計算
@@ -451,11 +371,9 @@ func useIoutilReadFile(fileName string) string{
 }
 
 //連結されたDBファイルの1つのバイト情報を受け取り、SRRファイルごとに分割された連想配列として返す
-func splitCsv(dbcont string) ([]string, []map[string]int, []map[string]int){
+func splitCsv(dbcont string) ([]string, []map[string]int){
     myslicemap := []map[string]int{}
     mymap := map[string]int{}
-    myslicemapfp := []map[string]int{}
-    mymapfp := map[string]int{}
     name := ""
     nameslice := []string{}
 
@@ -474,15 +392,8 @@ func splitCsv(dbcont string) ([]string, []map[string]int, []map[string]int){
                         temp_map[key] = value
                     }
                     myslicemap = append(myslicemap, temp_map)
-
-                    temp_mapfp := map[string]int{}
-                    for key, value := range mymapfp {
-                        temp_mapfp[key] = value
-                    }
-                    myslicemapfp = append(myslicemapfp, temp_mapfp)
                 }
                 mymap = map[string]int{}
-                mymapfp = map[string]int{}
                 name=item[1]
                 nameslice = append(nameslice, name)
             }else{
@@ -494,27 +405,48 @@ func splitCsv(dbcont string) ([]string, []map[string]int, []map[string]int){
                     panic(err)
                 }
                 mymap[item[0]]=f
-
-                //taxonomy pathの親ノードにも加算した値を作っていく
-                tpnodes:=strings.Split(item[0],";")
-                var builder strings.Builder //GOでは文字列は変更不可能だそうなのでBuilderを作って追加していく
-                for i, tpnode := range tpnodes {
-                    if i != 0 {
-                        builder.WriteString(";")
-                    }
-                    builder.WriteString(tpnode)
-                    mymapfp[builder.String()]+=f //nodeがまだ追加されていなくても、されていても大丈夫
-                }
             }
         }
     }
     //fmt.Println("test")
     myslicemap = append(myslicemap, mymap)
-    myslicemapfp = append(myslicemapfp, mymapfp)
-    return nameslice, myslicemap, myslicemapfp
+    return nameslice, myslicemap
 }
 
-func userCsvNewReader(fileName string) (string, map[string]int, map[string]int){
+func fillWithZero(a1 map[string]float64, a2 map[string]float64) ([]float64, []float64){
+    va1:=[]float64{}  //int配列の初期化
+    va2:=[]float64{}
+    //入力ファイルa1側とDB側a2でそれぞれにしか値がない場合に反対側に0を加える処理
+    for k1, v1 := range a1 {
+        va1 = append(va1, v1)
+        if v2, ok := a2[k1]; ok{
+            va2 = append(va2, v2)
+        }else{
+            va2 = append(va2, 0)
+        }
+    }
+    for k2, v2 := range a2 {
+        if _, ok := a1[k2]; !ok{
+            va1 = append(va1, 0)
+            va2 = append(va2, v2)
+        }
+    }
+    return va1, va2
+}
+
+func normalizeTo100(mymap map[string]int) (map[string]float64){
+    resmap := map[string]float64{}
+    cnt:= 0.0
+    for _, val := range mymap {
+        cnt+=float64(val)
+    }
+    for key, val := range mymap {
+        resmap[key]=float64(val)/cnt
+    }
+    return resmap
+}
+
+func userCsvNewReader(fileName string) (string, map[string]int){
     fp, err := os.Open(fileName)
     if err != nil {
         fmt.Println("userCsvNewReader error!")
@@ -523,7 +455,6 @@ func userCsvNewReader(fileName string) (string, map[string]int, map[string]int){
     defer fp.Close()
 
     array := map[string]int{} //taxonomy pathのノードそのまま
-    arrayfp := map[string]int{} //taxonomy pathの親のノードにも加算した結果
     name := ""
     reader := csv.NewReader(fp)
     reader.Comma = '\t'
@@ -547,24 +478,32 @@ func userCsvNewReader(fileName string) (string, map[string]int, map[string]int){
             f, err := strconv.Atoi(record[1])
             if err != nil {
                 fmt.Printf("%s\n", err.Error())
-                return name, array, arrayfp
+                return name, array
             }
             array[record[0]]=f
             //fmt.Println(f)
+        }
+    }
+    return name, array
+}
+
+func generateFullTaxonomyMap(mymap map[string]float64) (map[string]float64) {
+    arrayfp := map[string]float64{} //taxonomy pathの親のノードにも加算した結果
+    for key, val := range mymap {
             //taxonomy pathの親ノードにも加算した値を作っていく
-            tpnodes:=strings.Split(record[0],";")
+            tpnodes:=strings.Split(key,";")
             var builder strings.Builder //GOでは文字列は変更不可能だそうなのでBuilderを作って追加していく
             for i, tpnode := range tpnodes {
                 if i != 0 {
                     builder.WriteString(";")
                 }
                 builder.WriteString(tpnode)
-                arrayfp[builder.String()]+=f //nodeがまだ追加されていなくても、されていても大丈夫
+                arrayfp[builder.String()]+=val //nodeがまだ追加されていなくても、されていても大丈夫
             }
-        }
     }
-    return name, array, arrayfp
+    return arrayfp
 }
+
 func Pearson(a, b []float64) float64 {
 
     if len(a) != len(b) {
