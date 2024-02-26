@@ -121,7 +121,12 @@ router.get('/species', function (req, res, next) {
         }
         return item;
       });
-      res.render('species', { results: rowplus, key: req.query.name });
+      db.get("SELECT COUNT(*) AS count FROM data WHERE sp_name = ? ORDER BY percent DESC LIMIT 1000", [aValue], (err, row) => {
+        if (err) {
+          return console.error(err.message);
+        }
+        res.render('species', { results: rowplus, key: req.query.name, count: row.count });
+      });
     });
   });
 });

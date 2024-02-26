@@ -16,7 +16,7 @@ set -x
 #dbPath=/usr/local/yoshitake/
 dbPath=$(dirname $(readlink -f $maindir/data/db))
 
-#script/run-silva-cor.sh $newfilename
+script/run-silva-cor.sh $newfilename
 
 #Singularityのイメージがなければ、githubのリリースから取ってくる。ファイルサイズが大きいのでソースコードには含められない。
 if [ ! -e "${sdir}/python3_env_mako_installed.sif" ]; then
