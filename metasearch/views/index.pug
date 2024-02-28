@@ -164,10 +164,6 @@ block content
         }
         const lines = myText.trim().split('\n');
         const numberOfLines = lines.length;
-        // 結果を表示
-        const result = document.createElement('p');
-        result.textContent = `File ${index + 1}: ${file.name} has ${numberOfLines} lines.`;
-        resultsDiv.appendChild(result);
 
         // 4行ごとに1レコードとしてデータをグルーピング
         const records = [];
@@ -181,6 +177,12 @@ block content
         // 選択されたレコードを出力
         //console.log(selectedRecords.join('\n'));
         sendData(selectedRecords, email, file.name)
+
+        // 結果を表示
+        const result = document.createElement('p');
+        result.textContent = `File ${index + 1}: ${file.name} : ${selectedRecords.length} reads were randomly selected from the first ${numberOfLines} lines.`;
+        resultsDiv.appendChild(result);
+
       }
 
 
@@ -236,10 +238,6 @@ block content
         const numberOfLines1 = lines1.length;
         const lines2 = myText2.trim().split('\n');
         const numberOfLines2 = lines2.length;
-        // 結果を表示
-        const result = document.createElement('p');
-        result.textContent = `File ${index + 1}: ${files[0].name} has ${numberOfLines1} lines and ${files[1].name} has ${numberOfLines2}.`;
-        resultsDiv.appendChild(result);
 
         // 4行ごとに1レコードとしてデータをグルーピング
         const records = [];
@@ -255,6 +253,11 @@ block content
         // 選択されたレコードを出力
         //console.log(selectedRecords.join('\n'));
         sendData(selectedRecords, email, files[0].name)
+
+        // 結果を表示
+        const result = document.createElement('p');
+        result.textContent = `File ${index + 1}: ${files[0].name}, ${files[1].name} : ${selectedRecords.length} paired reads were randomly selected from the first ${numberOfLines1} and ${numberOfLines2} lines.`;
+        resultsDiv.appendChild(result);
       }
 
 
@@ -271,7 +274,7 @@ block content
         fetch('./upload/', {
           method: 'POST',
           body: formData
-        }).then(response => window.location.replace("./uploaded"))
+        }).then(response => {spinner.classList.add("loaded"); $("#btn").prop({"disabled":false, "class":"btn btn-secondary btn-lg btn-block"})}) //window.location.replace("./uploaded"))
           .then(data => console.log(data))
           .catch(error => {spinner.classList.add("loaded"); console.error('Error:', error)});
 
