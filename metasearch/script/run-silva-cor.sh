@@ -14,7 +14,7 @@ date=`date '+%Y-%m-%d-%H-%M-%S-%N'`
 tempdir=/tmp/metasearch_${date}-$pid
 echo "tempdir: $tempdir"
 
-input=`readlink -f "$1"` #$1=tmp/cf5a956d1de00aaea36b87346b21b4e8/cf5a956d1de00aaea36b87346b21b4e8.fq
+input=`readlink -f "$1"` #$1=tmp/cf5a956d1de00aaea36b87346b21b4e8/cf5a956d1de00aaea36b87346b21b4e8.fq.gz
 
 sdir=$(dirname `readlink -f $0`)
 source "$sdir"/config.sh

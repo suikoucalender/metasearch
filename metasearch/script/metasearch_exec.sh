@@ -1,7 +1,7 @@
 #!/bin/bash
 
 #tmp/hash値/hash値(.gz)
-newfilename=$1 #tmp/cf5a956d1de00aaea36b87346b21b4e8/cf5a956d1de00aaea36b87346b21b4e8.fq
+newfilename=$1 #tmp/cf5a956d1de00aaea36b87346b21b4e8/cf5a956d1de00aaea36b87346b21b4e8.fq.gz
 hash=$2 #cf5a956d1de00aaea36b87346b21b4e8
 original_filename=$3 #y2022-group3-fish-16S-Kabayakisantaro.fq
 usr_email=$4 #g.ecc.u-tokyo.ac.jp
@@ -24,6 +24,11 @@ if [ ! -e "${sdir}/python3_env_mako_installed.sif" ]; then
 fi
 if [ ! -e "${sdir}/krona_v2.7.1_cv1.sif" ]; then
  wget -O "${sdir}/krona_v2.7.1_cv1.sif" https://github.com/suikoucalender/metasearch/releases/download/0.1/krona_v2.7.1_cv1.sif
+fi
+
+if [ ! -e $newfilename.tsv ]; then
+ singularity run -B $maindir $sdir/python3_env_mako_installed.sif python $sdir/send_err_mail.py ${url}/${hash}/ ${usr_email} ${original_filename}
+ exit
 fi
 
 echo "<html><body>" > $maindir/tmp/${hash}/result.html
