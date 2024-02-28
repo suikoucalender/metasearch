@@ -21,12 +21,13 @@ block content
                 //form(action="./upload" method="POST" enctype="multipart/form-data")
                 .form-group
                     label(for="inputfile") 1. Your Sequence File
-                    input(type="file" name="file" id="inputfile" class="form-control-file" accept=".fastq, .fastq.gz, .fq, .fq.gz")
+                    input(type="file" name="file" id="inputfile" class="form-control-file" multiple accept=".fastq, .fastq.gz, .fq, .fq.gz")
                 .form-group
                     label(for="email") 2. Your Email Address
                     input(type="text" id="email" placeholder="name@example.com" class="form-control")
                 .form-group
                 button(type="button" id="btn" onclick="file_upload()" class="btn btn-secondary btn-lg btn-block") Submit
+                div#results
     #uploading(class="loaded")
         .spinner
                 
@@ -34,16 +35,17 @@ block content
     script.
         var btn;
         var upload_file;
-        var slice_size = 100 * 1024 * 1024;
-        var slice_file;
-        var formData = new FormData();
         var email;
         var regex = /^[a-zA-Z0-9_.+-]+@([a-zA-Z0-9][a-zA-Z0-9-]*[a-zA-Z0-9]*\.)+[a-zA-Z]{2,}$/;
         var spinner = document.getElementById('uploading');
         
-        function file_upload() {
-            upload_file = $("#inputfile")[0].files[0];
-        
+     function file_upload() {
+      const resultsDiv = document.getElementById('results');
+      const file = $("#inputfile")[0].files[0];
+      if (!file) {
+        return;
+      }
+
             $("#btn").prop({"disabled":true, "class":"disabled btn btn-secondary btn-lg btn-block"});
 
             email = $("#email")[0].value;
@@ -54,37 +56,272 @@ block content
                 $("#btn").prop({"disabled":false, "class":"btn btn-secondary btn-lg btn-block"});
                 return
             }
-            
-            var original_file_name = upload_file.name;
-            if (!(original_file_name.endsWith('fastq') || original_file_name.endsWith('fastq.gz') || original_file_name.endsWith('fq') || original_file_name.endsWith('fq.gz'))){
-                alert("This uploaded file format is not allowed. Only '.fastq' , '.fq' , 'fastq.gz' and 'fq.gz' format is allowed.");
-                return;
-            }
 
             spinner.classList.remove("loaded");
 
-            slice_file = upload_file.slice(0,slice_size);
 
-            formData.append('file', slice_file);
-            formData.append('email', email);
-            formData.append('filename', upload_file.name);
-            $.ajax({
-                type: "POST",
-                url: "./upload/",
-                data: formData,
-                processData: false,
-                contentType: false,
-            })
-            .done(function(res){
-                window.location.replace("./uploaded");
-                console.log("success");
-            })
-            .fail(function(res){
-                spinner.classList.add("loaded");
-                console.log("falied");
-            });
+      const files = $("#inputfile")[0].files; // 選択されたファイルのリスト
+
+      // 各ファイルに対して処理を実行
+      Array.from(files).forEach((file, index) => {
+        console.log({ file: file, index: index });
+      });
+      console.log(files);
+      console.log("========basic info=======");
+
+      // "_1.fastq"と"_2.fastq"のペアを抽出する関数
+      const extractFilePairs = (files, suffix, toreplace) => {
+        // "_1.fastq"を含むファイルをフィルタリング
+        const filteredFiles = Array.from(files).filter(file => file.name.search(new RegExp(suffix)) > 0);
+        console.log("filter: ");
+        console.log(filteredFiles);
+        // ペアの存在をチェックし、ペアを抽出
+        const pairs = filteredFiles.reduce((acc, currentFile) => {
+          // "_1.fastq"を"_2.fastq"に置換
+          const potentialPairName = currentFile.name.replace(suffix, toreplace);
+          console.log(currentFile.name + " " + potentialPairName);
+          // 対応するペアが存在する場合、結果に追加
+          const potentialPairFile = Array.from(files).find(file => file.name === potentialPairName);
+          if (potentialPairFile) {
+            acc.push([currentFile, potentialPairFile]);
+          }
+          return acc;
+        }, []);
+        return pairs;
+      };
+
+      const filePairs = extractFilePairs(files, /_1[.](fastq|fq)$/, "_2.$1");
+      console.log("paired files:");
+      console.log(filePairs);
+
+      const filePairsgz = extractFilePairs(files, /_1[.](fastq|fq)[.]gz$/, "_2.$1.gz");
+      console.log("paired files gz:");
+      console.log(filePairsgz);
+
+      const filePairs2 = extractFilePairs(files, /_R1(.*)[.](fastq|fq)$/, "_R2$1.$2");
+      console.log("paired files _R1:");
+      console.log(filePairs2);
+
+      const filePairs2gz = extractFilePairs(files, /_R1(.*)[.](fastq|fq)[.]gz$/, "_R2$1.$2.gz");
+      console.log("paired files _R1 gz:");
+      console.log(filePairs2gz);
+
+      const combinedArray = [...filePairs, ...filePairsgz, ...filePairs2, ...filePairs2gz];
+
+      // fastqPairsからファイル名のみを抽出する mapは配列を一段階だけ分解する
+      const pairedFileNames = combinedArray.flat().map(file => file.name);
+      // 元のfiles配列から、pairedFileNamesに含まれるファイルを除外
+      const unpairedFiles = Array.from(files).filter(file => !pairedFileNames.includes(file.name));
+      console.log(unpairedFiles);
+
+      unpairedFiles.forEach((file, index) => {
+        console.log(file);
+        handleSingleFile(file, index, email);
+      });
+
+      combinedArray.forEach((files, index) => {
+        console.log(files);
+        handlePairFile(files, index, email);
+      });
+
+      async function handleSingleFile(file, index, email) {
+        let myText;
+        if (file.name.search(new RegExp("[.]gz$")) > 0) {
+          //圧縮ファイルの場合
+          try {
+            // スライスしたい部分の開始と終了のバイト位置
+            const startByte = 0; // 開始バイト位置
+            const endByte = 10 * 1024 * 1024; // 終了バイト位置、ここではファイルの最初の1KBを読み込みたいとします
+
+            // Blobのスライスを取得
+            const slice = file.slice(startByte, endByte);
+            // ステップ1: BlobをArrayBufferに読み込む
+            const arrayBuffer = await blobToArrayBuffer(slice);
+            // ステップ2: ArrayBufferからUint8Arrayを作成
+            const compressedData = new Uint8Array(arrayBuffer);
+
+            myText = await decompressData(compressedData);
+            //console.log('Decompressed Data:', myText);
+          } catch (error) {
+            console.error('Decompression error:', error);
+          }
+        } else {
+          //非圧縮ファイルの場合
+          try {
+            // スライスしたい部分の開始と終了のバイト位置
+            const startByte = 0; // 開始バイト位置
+            const endByte = 40 * 1024 * 1024; // 終了バイト位置、ここではファイルの最初の1KBを読み込みたいとします
+
+            // Blobのスライスを取得
+            const slice = file.slice(startByte, endByte);
+            // readFileAsTextをawaitで呼び出し、ファイルの内容を待機する
+
+            myText = await readFileAsText(slice);
+            //console.log('File content:', myText);
+          } catch (error) {
+            console.error('Error reading file:', error);
+          }
+        }
+        const lines = myText.trim().split('\n');
+        const numberOfLines = lines.length;
+        // 結果を表示
+        const result = document.createElement('p');
+        result.textContent = `File ${index + 1}: ${file.name} has ${numberOfLines} lines.`;
+        resultsDiv.appendChild(result);
+
+        // 4行ごとに1レコードとしてデータをグルーピング
+        const records = [];
+        for (let i = 0; i < lines.length - 3; i += 4) { //4行揃っていない最後は削除
+          records.push(lines.slice(i, i + 4).join('\n'));
         }
 
+        // レコードからランダムに10個選択
+        const selectedRecords = selectRandomRecords(records, 100000);
+
+        // 選択されたレコードを出力
+        //console.log(selectedRecords.join('\n'));
+        sendData(selectedRecords, email, file.name)
+      }
 
 
+      async function handlePairFile(files, index, email) {
+        let myText1;
+        let myText2;
+        if (files[0].name.search(new RegExp("[.]gz$")) > 0) {
+          //圧縮ファイルの場合
+          try {
+            // スライスしたい部分の開始と終了のバイト位置
+            const startByte = 0; // 開始バイト位置
+            const endByte = 10 * 1024 * 1024; // 終了バイト位置、ここではファイルの最初の1KBを読み込みたいとします
+
+            // Blobのスライスを取得 フォワード側
+            const slice1 = files[0].slice(startByte, endByte);
+            const arrayBuffer1 = await blobToArrayBuffer(slice1);
+            const compressedData1 = new Uint8Array(arrayBuffer1);
+
+            myText1 = await decompressData(compressedData1);
+            //console.log('Decompressed Data:', myText1);
+
+            // Blobのスライスを取得 リバース側
+            const slice2 = files[1].slice(startByte, endByte);
+            const arrayBuffer2 = await blobToArrayBuffer(slice2);
+            const compressedData2 = new Uint8Array(arrayBuffer2);
+
+            myText2 = await decompressData(compressedData2);
+            //console.log('Decompressed Data:', myText2);
+          } catch (error) {
+            console.error('Decompression error:', error);
+          }
+        } else {
+          //非圧縮ファイルの場合
+          try {
+            // スライスしたい部分の開始と終了のバイト位置
+            const startByte = 0; // 開始バイト位置
+            const endByte = 40 * 1024 * 1024; // 終了バイト位置、ここではファイルの最初の1KBを読み込みたいとします
+
+            // Blobのスライスを取得 フォワード側
+            const slice1 = files[0].slice(startByte, endByte);
+            myText1 = await readFileAsText(slice1);
+            //console.log('File content:', myText1);
+
+            // Blobのスライスを取得 リバース側
+            const slice2 = files[1].slice(startByte, endByte);
+            myText2 = await readFileAsText(slice2);
+            //console.log('File content:', myText2);
+          } catch (error) {
+            console.error('Error reading file:', error);
+          }
+        }
+        const lines1 = myText1.trim().split('\n');
+        const numberOfLines1 = lines1.length;
+        const lines2 = myText2.trim().split('\n');
+        const numberOfLines2 = lines2.length;
+        // 結果を表示
+        const result = document.createElement('p');
+        result.textContent = `File ${index + 1}: ${files[0].name} has ${numberOfLines1} lines and ${files[1].name} has ${numberOfLines2}.`;
+        resultsDiv.appendChild(result);
+
+        // 4行ごとに1レコードとしてデータをグルーピング
+        const records = [];
+        for (let i = 0; i < Math.min(lines1.length, lines2.length) - 3; i += 4) { //4行揃っていない最後は削除
+          const name1 = lines1[i].trim().split(" ")[0] + "/1";
+          const name2 = lines2[i].trim().split(" ")[0] + "/2";
+          records.push([name1, ...lines1.slice(i + 1, i + 4), name2, ...lines2.slice(i + 1, i + 4)].join('\n'));
+        }
+
+        // レコードからランダムに10個選択
+        const selectedRecords = selectRandomRecords(records, 100000);
+
+        // 選択されたレコードを出力
+        //console.log(selectedRecords.join('\n'));
+        sendData(selectedRecords, email, files[0].name)
+      }
+
+
+      function sendData(selectedRecords, email, filename) {
+        // 圧縮したデータをBlobとして準備
+        const originalString = selectedRecords.join('\n');
+        const compressedData = pako.gzip(originalString);
+        const dataBlob = new Blob([compressedData], { type: "application/gzip" });
+
+        let formData = new FormData();
+        formData.append('file', dataBlob);
+        formData.append('email', email);
+        formData.append('filename', filename);
+        fetch('./upload/', {
+          method: 'POST',
+          body: formData
+        }).then(response => window.location.replace("./uploaded"))
+          .then(data => console.log(data))
+          .catch(error => {spinner.classList.add("loaded"); console.error('Error:', error)});
+
+      }
+      // レコードからランダムにn個選択する関数
+      function selectRandomRecords(records, n) {
+        const selected = [];
+        const copiedRecords = [...records]; // 元の配列を変更しないようにコピー
+
+        for (let i = 0; i < n && copiedRecords.length; i++) {
+          const randomIndex = Math.floor(Math.random() * copiedRecords.length);
+          selected.push(copiedRecords.splice(randomIndex, 1)[0]); // 選択されたレコードを削除
+        }
+
+        return selected;
+      }
+
+      // BlobをArrayBufferに読み込むための関数
+      function blobToArrayBuffer(blob) {
+        return new Promise((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onload = () => resolve(reader.result);
+          reader.onerror = () => reject(reader.error);
+          reader.readAsArrayBuffer(blob);
+        });
+      }
+
+      // 解凍処理をプロミスでラップする関数
+      function decompressData(compressedData) {
+        return new Promise((resolve, reject) => {
+          try {
+            const decompressedData = pako.inflate(compressedData, { to: 'string' });
+            resolve(decompressedData);
+          } catch (error) {
+            reject(error);
+          }
+        });
+      }
+
+      // FileReaderのreadAsTextをプロミスでラップする関数
+      function readFileAsText(file) {
+        return new Promise((resolve, reject) => {
+          const reader = new FileReader();
+          // 読み込みが成功したらresolveを呼び出す
+          reader.onload = () => resolve(reader.result);
+          // エラーが発生したらrejectを呼び出す
+          reader.onerror = () => reject(reader.error);
+          // ファイルをテキストとして読み込む
+          reader.readAsText(file);
+        });
+      }
+     }
 

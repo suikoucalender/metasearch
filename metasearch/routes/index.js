@@ -55,12 +55,13 @@ router.post('/upload', upload.single('file'), function (req, res, next) {
     //HTMLファイル保存用のディレクトリを作成
     execSync("mkdir tmp/" + hash + "/" + hash);
 
-    //拡張子に合わせて、新しいファイル名と移動先のパスを設定
-    if (getExt(original_filename) == "gz") {
-        newfilename = "tmp/" + hash + "/" + hash + ".gz";
-    } else {
-        newfilename = "tmp/" + hash + "/" + hash + ".fq";
-    }
+    ////拡張子に合わせて、新しいファイル名と移動先のパスを設定
+    //if (getExt(original_filename) == "gz") {
+    //    newfilename = "tmp/" + hash + "/" + hash + ".gz";
+    //} else {
+    //    newfilename = "tmp/" + hash + "/" + hash + ".fq";
+    //}
+    newfilename = "tmp/" + hash + "/" + hash + ".fq.gz";
 
     //ファイル名の変更とファイルの移動
     fs.rename("tmp/" + filename, newfilename, (err) => {
