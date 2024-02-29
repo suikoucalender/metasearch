@@ -26,18 +26,23 @@ def send_mail(subject, message, user_email):
 	smtp.login(sender_name, passwd)
 	smtp.sendmail(from_addr, to_addr, msg.as_string())
 	smtp.quit()
- 
+
 argv = sys.argv
 result_url = argv[1] #結果のURL
 email = argv[2] #ユーザーのEmailアドレス
 original_filename = argv[3] #元のファイル名
 
-message = """This is metasearch.
-Your analysis has been finished.
-You can check your result from """ + result_url + """weighted_unifrac.output.html
+message = """Dear User,
 
+We are pleased to inform you that your analysis through MetaSearchDB has been successfully completed.
+To review your results, please visit the following link: """ + result_url + """weighted_unifrac.output.html.
 
-If you have any question, please ask me.
-You can contact us via suikou_metasearch@yahoo.co.jp """
+If you have any inquiries or require further assistance, do not hesitate to reach out. Our team is available to provide support and can be contacted directly at suikou_metasearch@yahoo.co.jp.
+Thank you for choosing MetaSearchDB for your analytical needs. We look forward to assisting you with any future queries.
 
-send_mail("Your analysis finished: " + original_filename, message, email)
+Best regards,
+
+The MetaSearchDB Team
+"""
+
+send_mail("Completion of Your Analysis via MetaSearchDB: " + original_filename, message, email)

@@ -66,7 +66,7 @@ echo "</div>" >> tmp/$hash/$k.output.html
 
 #Kronaのグラフ
 cat $newfilename.tsv.result.$k|cut -f 1|
- while read i; do tail -n+2 data/db/*/$i.input|awk -F'\t' '{print $2"\t"$1}'|sed 's/;/\t/g' > tmp/$hash/$k.krona.$i.input; done
+ while read i; do file=data/`look $i$'\t' data/input.list.sort|cut -f 2`; tail -n+2 $file|awk -F'\t' '{print $2"\t"$1}'|sed 's/;/\t/g' > tmp/$hash/$k.krona.$i.input; done
 cat $newfilename.tsv|awk -F'\t' '{print $2"\t"$1}'|sed 's/;/\t/g' > tmp/$hash/$k.krona.input.input
 in="tmp/$hash/$k.krona.input.input,input"
 while read i; do
@@ -77,7 +77,7 @@ echo "<div class='krona'><h3>Krona Compotion Graph</h3><iframe src='./$k.output.
 
 #割合表
 cat $newfilename.tsv.result.$k|cut -f 1|
- while read i; do cat data/db/*/$i.input| awk -F'\t' 'NR==1{print $0} NR>1{a[$1]=$2; cnt+=$2} END{for(i in a){print i"\t"a[i]/cnt*100}}' > tmp/$hash/$k.merge.$i.input; done
+ while read i; do file=data/`look $i$'\t' data/input.list.sort|cut -f 2`; cat $file| awk -F'\t' 'NR==1{print $0} NR>1{a[$1]=$2; cnt+=$2} END{for(i in a){print i"\t"a[i]/cnt*100}}' > tmp/$hash/$k.merge.$i.input; done
 cat $newfilename.tsv|awk -F'\t' 'NR==1{print $0} NR>1{a[$1]=$2; cnt+=$2} END{for(i in a){print i"\t"a[i]/cnt*100}}' > tmp/$hash/$k.merge.input
 in=tmp/$hash/$k.merge.input
 while read i; do
