@@ -20,7 +20,7 @@ block content
                 p(id="explain") Upload fastq(.gz) file you want to search in the database
                 //form(action="./upload" method="POST" enctype="multipart/form-data")
                 .form-group
-                    label(for="inputfile") 1. Your Sequence File
+                    label(for="inputfile") 1. Your Sequence Files (Single-ended and paired-ended FASTQ files of multiple samples can be selected simultaneously.)
                     input(type="file" name="file" id="inputfile" class="form-control-file" multiple accept=".fastq, .fastq.gz, .fq, .fq.gz")
                 .form-group
                     label(for="email") 2. Your Email Address (You will receive a notification at this e-mail address when the analysis is complete.)
