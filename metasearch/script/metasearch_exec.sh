@@ -32,13 +32,28 @@ if [ ! -e $newfilename.tsv ]; then
 fi
 
 echo "<html><body><h1>${original_filename}</h1>" > $maindir/tmp/${hash}/result.html
-echo `cat $newfilename.reads`"reads were used<br>" >> $maindir/tmp/${hash}/result.html
+#基本的には合計100%の割合にしたときの相関係数、Jaccard指数、UniFrac指数を計算しています。重みなしのJaccardとUniFracは1%以上のノードを対象に計算しています。Weightedとついているのは重み有の指数です。
+#fullnodesがついているのはtaxonomy pathの親ノードに子ノードの存在割合を加算し、親ノードも計算対象に入れています。こうすることで相関係数やJaccard指数も遺伝的な距離を考慮した距離になります。
+#logがついているのは割合+0.25%にした後でlog2変換してから各種距離を計算しています。
+echo 'Basically, we calculate the correlation coefficient, Jaccard index, and UniFrac index for a total of 100%.
+ The unweighted Jaccard and UniFrac indexes are calculated for nodes with a weight of 1% or more;
+ the weighted index is the index with a weight;
+ the fullnodes index adds the percentage of child nodes to the parent nodes of the taxonomy path and includes the parent node in the calculation.
+ The "log" is the percentage plus 0.25%, and then the log2 transformation is performed before calculating the various similarities.<br><br>' >> $maindir/tmp/${hash}/result.html
 for k in correlation correlation.log correlation.fullnodes correlation.fullnodes.log weighted_jaccard weighted_jaccard.log weighted_jaccard.fullnodes weighted_jaccard.fullnodes.log jaccard jaccard.fullnodes unifrac weighted_unifrac; do
 
 echo "<a href='$k.output.html'>$k</a><br>" >> $maindir/tmp/${hash}/result.html
 #類似度スコア＆サンプル名など
 cat $sdir/table_header.html > tmp/$hash/$k.output.html
-echo '<header><div class="head-content"><h1>MetaSearch Result</h1><h3>'"${original_filename}"'</h3></div></header><main><div class="main-content">' >> tmp/$hash/$k.output.html
+echo '<header>
+ <div class="head-content">
+  <h1>MetaSearch Result</h1>
+  <h3>'"${original_filename}"'</h3>
+  <p style="text-align:left; float: left;">'`cat $newfilename.reads`' reads were used</p>
+  <p style="text-align:right;"><a href="./result.html"><font color="white">Other similarity indexes</font></a></p>
+ </div>
+</header>
+<main><div class="main-content">' >> tmp/$hash/$k.output.html
 
 cat $newfilename.tsv.result.$k |awk -F'\t' '
  FILENAME==ARGV[1]{a[NR]=$1; b[NR]=$2; a2[$1]=1}

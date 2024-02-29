@@ -34,7 +34,7 @@ original_filename = argv[3] #元のファイル名
 
 message = """This is metasearch.
 Your analysis has been finished.
-You can check your result from """ + result_url + """result.html
+You can check your result from """ + result_url + """weighted_unifrac.output.html
 
 
 If you have any question, please ask me.
