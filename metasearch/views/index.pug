@@ -23,10 +23,12 @@ block content
                     label(for="inputfile") 1. Your Sequence File
                     input(type="file" name="file" id="inputfile" class="form-control-file" multiple accept=".fastq, .fastq.gz, .fq, .fq.gz")
                 .form-group
-                    label(for="email") 2. Your Email Address
+                    label(for="email") 2. Your Email Address (You will receive a notification at this e-mail address when the analysis is complete.)
                     input(type="text" id="email" placeholder="name@example.com" class="form-control")
                 .form-group
                 button(type="button" id="btn" onclick="file_upload()" class="btn btn-secondary btn-lg btn-block") Submit
+                br
+                br
                 div#results
     #uploading(class="loaded")
         .spinner
