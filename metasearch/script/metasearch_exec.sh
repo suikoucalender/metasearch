@@ -31,8 +31,9 @@ if [ ! -e $newfilename.tsv ]; then
  exit
 fi
 
-echo "<html><body>" > $maindir/tmp/${hash}/result.html
-for k in correlation correlation.log correlation.fullnodes correlation.fullnodes.log weighted_jaccard weighted_jaccard.log weighted_jaccard.fullnodes weighted_jaccard.fullnodes.log jaccard jaccard.fullnodes; do
+echo "<html><body><h1>${original_filename}</h1>" > $maindir/tmp/${hash}/result.html
+echo `cat $newfilename.reads`"reads were used<br>" >> $maindir/tmp/${hash}/result.html
+for k in correlation correlation.log correlation.fullnodes correlation.fullnodes.log weighted_jaccard weighted_jaccard.log weighted_jaccard.fullnodes weighted_jaccard.fullnodes.log jaccard jaccard.fullnodes unifrac weighted_unifrac; do
 
 echo "<a href='$k.output.html'>$k</a><br>" >> $maindir/tmp/${hash}/result.html
 #類似度スコア＆サンプル名など

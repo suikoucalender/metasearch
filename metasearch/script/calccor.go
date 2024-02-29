@@ -116,6 +116,8 @@ func main() {
     list_jaccardfp := List{}
     list_weighted_jaccardfp := List{}
     list_weighted_jaccardfplog := List{}
+    list_unifrac := List{}
+    list_weighted_unifrac := List{}
 
     paths:=dirwalk(inputdir)
     for _, path := range paths {
@@ -160,6 +162,8 @@ func main() {
                 jac:=jaccard(a1,a2)
                 jacfp:=jaccard(afp1,afp2)
 
+                uni, wuni:=unifrac(a1, a2)
+
                 mutex.Lock()
                 list=add_to_list(fn2, p, list, num_hits) //num_hitsは出力ヒット数
                 listlog=add_to_list(fn2, plog, listlog, num_hits)
@@ -171,6 +175,8 @@ func main() {
                 list_weighted_jaccardfplog=add_to_list(fn2, wjfplog, list_weighted_jaccardfplog, num_hits)
                 list_jaccard=add_to_list(fn2, jac, list_jaccard, num_hits)
                 list_jaccardfp=add_to_list(fn2, jacfp, list_jaccardfp, num_hits)
+                list_unifrac=add_to_list(fn2, uni, list_unifrac, num_hits)
+                list_weighted_unifrac=add_to_list(fn2, wuni, list_weighted_unifrac, num_hits)
 
                 mutex.Unlock()
             }
@@ -189,6 +195,9 @@ func main() {
 
     save_list_to_file(list_jaccard, inputtsv+".result.jaccard", num_hits)
     save_list_to_file(list_jaccardfp, inputtsv+".result.jaccard.fullnodes", num_hits)
+
+    save_list_to_file(list_unifrac, inputtsv+".result.unifrac", num_hits)
+    save_list_to_file(list_weighted_unifrac, inputtsv+".result.weighted_unifrac", num_hits)
 
 }
 
@@ -290,36 +299,70 @@ func jaccard(x map[string]float64, y map[string]float64) (float64){
     return sxy/(sx+sy-sxy)
 }
 
-//https://mothur.org/wiki/weighted_unifrac_algorithm/を参考にしたけど、結局X, Y2つの微生物叢のツリーのリード相対量を引いたツリーを作って、エッジｘ2つのノードの値の足し算/2をノード総当りで計算
-func unifrac(x map[string]int, y map[string]int) (float64){
-    dist_dif := 0.0
-    dist_total := 0.0
-    xsum := 0
-    ysum := 0
+func unifrac(x map[string]float64, y map[string]float64) (float64, float64){
+    xsum := 0.0
+    ysum := 0.0
     for _, xval := range x{
-        xsum += xval
+        xsum += float64(xval)
     }
     for _, yval := range y{
-        ysum += yval
+        ysum += float64(yval)
     }
+    xmap := map[string]float64{}
+    ymap := map[string]float64{}
+
     for xkey, xval := range x{
-        yval_xkey:=0
-        _, ok := y[xkey]
-        if ok{
-            yval_xkey = y[xkey]
-        }
-        for ykey, yval := range y{
-            xval_ykey:=0
-            _, ok := x[ykey]
-            if ok{
-                xval_ykey = x[ykey]
+        if float64(xval) >= xsum * 0.01{
+            tpnodes:=strings.Split(xkey,";")
+            var builder strings.Builder //GOでは文字列は変更不可能だそうなのでBuilderを作って追加していく
+            for i, tpnode := range tpnodes {
+                if i != 0 {
+                    builder.WriteString(";")
+                }
+                builder.WriteString(tpnode)
+                xmap[builder.String()]+=xval //nodeがまだ追加されていなくても、されていても大丈夫
             }
-            total_val, different_val := unifracElement(xkey, ykey)
-            dist_dif+=float64(different_val)*(math.Abs(float64(xval)/float64(xsum)-float64(yval_xkey)/float64(ysum))+math.Abs(float64(xval_ykey)/float64(xsum)-float64(yval)/float64(ysum)))/2
-            dist_total+=float64(total_val)
         }
     }
-    return dist_dif/dist_total
+    for ykey, yval := range y{
+        if float64(yval) >= ysum * 0.01{
+            tpnodes:=strings.Split(ykey,";")
+            var builder strings.Builder //GOでは文字列は変更不可能だそうなのでBuilderを作って追加していく
+            for i, tpnode := range tpnodes {
+                if i != 0 {
+                    builder.WriteString(";")
+                }
+                builder.WriteString(tpnode)
+                ymap[builder.String()]+=yval //nodeがまだ追加されていなくても、されていても大丈夫
+            }
+        }
+    }
+
+    cntx:=0
+    cnty:=0
+    cntxy:=0
+    sumx:=0.0
+    sumy:=0.0
+    sumdxy:=0.0
+    for xkey, xval := range xmap{
+        cntx++
+        sumx+=xval
+        if _, exists := ymap[xkey]; exists{
+            cntxy++
+            sumdxy+=math.Abs(xval - ymap[xkey])
+        }else{
+            sumdxy+=xval
+        }
+    }
+    for ykey, yval := range ymap{
+        cnty++
+        sumy+=yval
+        if _, exists := xmap[ykey]; !exists{
+            sumdxy+=yval
+        }
+    }
+    //UniFrac, Weighted UniFracを返す
+    return float64(cntxy)/float64(cntx+cnty-cntxy), 1 - sumdxy/(sumx+sumy)
 }
 
 func unifracElement(xpath string, ypath string) (int, int){

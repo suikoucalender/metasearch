@@ -3,9 +3,8 @@
 if [ "$1" = "" ]; then echo $0 "<input.fastq(.gz)>"; exit 1; fi
 
 echo "CMD: $0 $*"
-n=80000 #最大で使用するリード数x4
 n1=300 #最初に使用するリード数
-nmax=200000 #最大で使用するリード数
+nmax=100000 #最大で使用するリード数
 min_hit=100
 
 work=$PWD
@@ -32,10 +31,20 @@ if [ `echo "$input"|grep [.]gz$|wc -l` = 1 ]; then
 else
  cmd=cat
 fi
-#ファイルが途中で切れていて3行目以降がない行はスキップ
-#リード名の最後に/1などが付いていないと後々困るのでついていなければつける
-$cmd "$input"|paste - - - -|awk -F'\t' 'NF>2'|shuf|head -n $n1|
- awk -F'\t' '{split($1,arr," "); a=substr(arr[1],2); if(a!~"/[1-4]$/"){a=a"/1"}; print ">"a; print $2}' > input/input1.fa
+
+isPaired=`$cmd "$input"|head -n 5 |tail -n 1|sed 's/ .*//'|grep "/2$"|wc -l`
+if [ $isPaired = 1 ]; then
+ #ペアエンドを１つにしたファイル形式の場合
+ $cmd "$input"|paste - - - - - - - -|awk -F'\t' 'NF>6'|shuf|head -n $n1|awk -F'\t' '{print ">"substr($1,2); print $2; print ">"substr($5,2); print $6}' > input/input1.fa
+ cat input/input1.fa|awk 'END{print NR/4}' > $input.reads
+else
+ #シングルエンドの場合
+ #ファイルが途中で切れていて3行目以降がない行はスキップ(ブラウザ側でちゃんと分割するようにしたので、基本的には３行のような中途半端なリードはないはず)
+ #リード名の最後に/1などが付いていないと後々困るのでついていなければつける
+ $cmd "$input"|paste - - - -|awk -F'\t' 'NF>2'|shuf|head -n $n1|
+  awk -F'\t' '{split($1,arr," "); a=substr(arr[1],2); if(a!~"/[1-4]$/"){a=a"/1"}; print ">"a; print $2}' > input/input1.fa
+ cat input/input1.fa|awk 'END{print NR/2}' > $input.reads
+fi
 
 #BLAST->LCA解析を実行
 bitscore=100
@@ -57,10 +66,22 @@ if [ $hit -lt $min_hit ]; then
  else
   n2=`expr $n1 '*' $min_hit / $hit`
  fi
+
  set +o pipefail
- $cmd "$input"|paste - - - -|awk -F'\t' 'NF>2'|shuf|head -n $n2|
-  awk -F'\t' '{split($1,arr," "); a=substr(arr[1],2); if(a!~"/[1-4]$/"){a=a"/1"}; print ">"a; print $2}' > input/input2.fa
+ if [ $isPaired = 1 ]; then
+  #ペアエンドを１つにしたファイル形式の場合
+  $cmd "$input"|paste - - - - - - - -|awk -F'\t' 'NF>6'|shuf|head -n $n2|awk -F'\t' '{print ">"substr($1,2); print $2; print ">"substr($5,2); print $6}' > input/input2.fa
+  cat input/input2.fa|awk 'END{print NR/4}' > $input.reads
+ else
+  #シングルエンドの場合
+  #ファイルが途中で切れていて3行目以降がない行はスキップ(ブラウザ側でちゃんと分割するようにしたので、基本的には３行のような中途半端なリードはないはず)
+  #リード名の最後に/1などが付いていないと後々困るのでついていなければつける
+  $cmd "$input"|paste - - - -|awk -F'\t' 'NF>2'|shuf|head -n $n2|
+   awk -F'\t' '{split($1,arr," "); a=substr(arr[1],2); if(a!~"/[1-4]$/"){a=a"/1"}; print ">"a; print $2}' > input/input2.fa
+  cat input/input2.fa|awk 'END{print NR/2}' > $input.reads
+ fi
  set -o pipefail
+
  $singularity_path exec -B ${tempdir} -B "$blastdb_dir" $sdir/ncbi_blast_2.13.0.sif blastn -num_threads 8 -db ${real_blastdb_path} -query ${tempdir}/input/input2.fa -outfmt 6 -max_target_seqs 500 > $tempdir/blast.txt
 fi
 
