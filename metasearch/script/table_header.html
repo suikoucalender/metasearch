@@ -56,7 +56,7 @@ table th,table td{
 {
   position: relative;
   margin-left: 10px;
-  content: '↓';
+  content: '↑';
 #  content: '\f163';
   color: #6bb6ff;
   font-size: 1.2rem;
@@ -69,7 +69,7 @@ table th,table td{
 {
   position: relative;
   margin-left: 10px;
-  content: '↑';
+  content: '↓';
 #  content: '\f886';
   color: #6bb6ff;
   font-size: 1.2rem;
@@ -107,6 +107,18 @@ $(document).ready(function(){
      headers: {
        0: {sorter:false}
      }
+  });
+
+  // ヘッダーがクリックされたときのイベントを上書きして降順でソートされるように変更
+  $("#test thead th").each(function(column) {
+      $(this).click(function() {
+          var findSortKey = function($cell) {
+              return $cell.find('.sort-key').text().toUpperCase() + ' ' + $cell.text().toUpperCase();
+          };
+          var sortOrder = $(this).hasClass("headerSortDown") ? 0 : 1; // 0: 昇順, 1: 降順
+          // TableSorter のソートメソッドを呼び出し、手動でソート順序を指定
+          $("#test").trigger("sorton", [[[column, sortOrder]]]);
+      });
   });
 });
 </script>

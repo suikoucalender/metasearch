@@ -47,7 +47,7 @@ echo "<a href='$k.output.html'>$k</a><br>" >> $maindir/tmp/${hash}/result.html
 cat $sdir/table_header.html > tmp/$hash/$k.output.html
 echo '<header>
  <div class="head-content">
-  <h1>MetaSearch Result</h1>
+  <h1>MetaSearchDB Result</h1>
   <h3>'"${original_filename}"'</h3>
   <p style="text-align:left; float: left;">'`cat $newfilename.reads`' reads were used</p>
   <p style="text-align:right;"><a href="./result.html"><font color="white">Other similarity indexes</font></a></p>

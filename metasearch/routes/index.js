@@ -37,23 +37,48 @@ router.post('/upload', upload.single('file'), function (req, res, next) {
     //変更後のファイル名
     var newfilename;
 
-    //日付を取得
-    var dt = new Date();
+    ////日付を取得
+    //var dt = new Date();
+    //
+    ////ランダムな文字列を生成
+    //var chars = 'sdasdalASDKAJsdlaj298an2a2kd9';
+    //var rand_str = '';
+    //for (var i = 0; i < 8; i++) {
+    //    rand_str += chars.charAt(Math.floor(Math.random() * chars.length)); //ランダムな1文字を取得
+    //}
+
+    // 現在の日時を取得
+    const now = new Date();
+
+    // 各部分を個別に取得して、必要に応じてゼロ埋めする
+    const year = now.getFullYear();
+    const month = String(now.getMonth() + 1).padStart(2, '0'); // 月は0から始まるため、1を加える
+    const day = String(now.getDate()).padStart(2, '0');
+    const hour = String(now.getHours()).padStart(2, '0');
+    const minute = String(now.getMinutes()).padStart(2, '0');
+    const second = String(now.getSeconds()).padStart(2, '0');
+    const millisecond = String(now.getMilliseconds()).padStart(3, '0');
+
+    // フォーマットに従って文字列を組み立てる
+    let dateString = `${year}${month}${day}${hour}${minute}${second}${millisecond}`;
 
     //ランダムな文字列を生成
-    var chars = 'sdasdalASDKAJsdlaj298an2a2kd9';
-    var rand_str = '';
-    for (var i = 0; i < 8; i++) {
-        rand_str += chars.charAt(Math.floor(Math.random() * chars.length));
+    var chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+    for (var i = 0; i < 4; i++) {
+        dateString += chars.charAt(Math.floor(Math.random() * chars.length)); //ランダムな1文字を取得
     }
 
-    //日付とEmailアドレスとランダム文字列からハッシュ値を計算
-    var hash = crypto.createHash("md5").update(dt + email + rand_str).digest("hex");
+    console.log("new data: "+dateString);
+
+    ////日付とEmailアドレスとランダム文字列からハッシュ値を計算
+    //var hash = crypto.createHash("md5").update(dt + email + rand_str).digest("hex");
+    var hash = dateString;
 
     //ハッシュ値と同じ名前のディレクトリをtmp以下に作成
-    execSync("mkdir tmp/" + hash);
-    //HTMLファイル保存用のディレクトリを作成
-    execSync("mkdir tmp/" + hash + "/" + hash);
+    fs.mkdirSync('tmp/'+hash, { recursive: true });
+    //execSync("mkdir tmp/" + hash);
+    ////HTMLファイル保存用のディレクトリを作成
+    //execSync("mkdir tmp/" + hash + "/" + hash);
 
     ////拡張子に合わせて、新しいファイル名と移動先のパスを設定
     //if (getExt(original_filename) == "gz") {
