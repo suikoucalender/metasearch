@@ -77,8 +77,11 @@ echo "<div class='krona'><h3>Krona Compotion Graph</h3><iframe src='./$k.output.
 
 #割合表
 cat $newfilename.tsv.result.$k|cut -f 1|
- while read i; do file=data/`look $i$'\t' data/input.list.sort|cut -f 2`; cat $file| awk -F'\t' 'NR==1{print $0} NR>1{a[$1]=$2; cnt+=$2} END{for(i in a){print i"\t"a[i]/cnt*100}}' > tmp/$hash/$k.merge.$i.input; done
-cat $newfilename.tsv|awk -F'\t' 'NR==1{print $0} NR>1{a[$1]=$2; cnt+=$2} END{for(i in a){print i"\t"a[i]/cnt*100}}' > tmp/$hash/$k.merge.input
+ while read i; do
+  file=data/`look $i$'\t' data/input.list.sort|cut -f 2`;
+  cat $file| awk -F'\t' 'NR==1{header=$0} NR>1{a[$1]=$2; cnt+=$2} END{print header" ("cnt")"; for(i in a){print i"\t"a[i]/cnt*100}}' > tmp/$hash/$k.merge.$i.input;
+ done
+cat $newfilename.tsv|awk -F'\t' 'NR==1{header=$0} NR>1{a[$1]=$2; cnt+=$2} END{print header" ("cnt")"; for(i in a){print i"\t"a[i]/cnt*100}}' > tmp/$hash/$k.merge.input
 in=tmp/$hash/$k.merge.input
 while read i; do
  in="$in tmp/$hash/$k.merge.$i.input"
