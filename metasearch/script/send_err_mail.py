@@ -35,6 +35,6 @@ original_filename = argv[3] #元のファイル名
 message = """This is metasearch.
 Your analysis has been finished with an error about""" + original_filename + """
 
-You can contact us via suikou_metasearch@yahoo.co.jp """
+You can contact us via suikou-admin@googlegroups.com """
 
 send_mail("Your analysis finished with an error: " + original_filename, message, email)

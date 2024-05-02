@@ -37,7 +37,7 @@ message = """Dear User,
 We are pleased to inform you that your analysis through MetaSearchDB has been successfully completed.
 To review your results, please visit the following link: """ + result_url + """weighted_unifrac.output.html.
 
-If you have any inquiries or require further assistance, do not hesitate to reach out. Our team is available to provide support and can be contacted directly at suikou_metasearch@yahoo.co.jp.
+If you have any inquiries or require further assistance, do not hesitate to reach out. Our team is available to provide support and can be contacted directly at suikou-admin@googlegroups.com .
 Thank you for choosing MetaSearchDB for your analytical needs. We look forward to assisting you with any future queries.
 
 Best regards,
