@@ -8,6 +8,7 @@ var upload = multer({ dest: "tmp/" });
 var { execSync } = require('child_process');
 require('date-utils');
 var sqlite3 = require('sqlite3').verbose();
+const readline = require('readline');
 
 /* GET home page. */
 router.get('/', function (req, res, next) {
@@ -120,40 +121,64 @@ router.get('/species', function (req, res, next) {
   var aValue = req.query.name;
   var db = new sqlite3.Database('data/species.db');
   // SQLiteを使って`name`の値に基づいてデータベースを検索
+  //db.all("select * from data join srainfo on data.srr_name = srainfo.srr_id where data.sp_name = ? order by data.percent desc limit 1000", [aValue], function(err, rows) {
   db.all("SELECT * FROM data WHERE sp_name = ? ORDER BY percent DESC LIMIT 1000", [aValue], function(err, rows) {
     if (err) {
       res.status(500).send("データベースエラー");
       return console.error(err.message);
     }
-
-    // IDに対応する情報を検索して配列に保存
-    const srrNames = rows.map(row => row.srr_name);
-    const infoFilePath = 'data/sra_info.txt';
-
-    // infoファイルを読み込む
-    fs.readFile(infoFilePath, 'utf8', (err, data) => {
+    const srrids = rows.map(item => {
+      //console.log(item)
+      return item.srr_name
+    });
+    const placeholders = srrids.map((_, index) => '?').join(','); // SQLインジェクションを防ぐ
+    const orderClause = srrids.map((id, index) => `WHEN srr_id = '${id}' THEN ${index}`).join(' ');
+    //console.log(placeholders)
+    //console.log(orderClause)
+    // SQLクエリを実行
+    //db.all(`SELECT * FROM srainfo WHERE srr_id IN (${placeholders}) ORDER BY CASE ${orderClause} END`, srrids, (err, rows2) => { //出来るだけ順番をクエリー順に保存するならこっちだけど、結果がないIDは飛ばされるので後で自分で連結することにした
+    db.all(`SELECT * FROM srainfo WHERE srr_id IN (${placeholders})`, srrids, (err, rows2) => {
       if (err) {
-        return res.status(500).send("リストファイルを読み込めませんでした。");
+        console.error('クエリ実行エラー: ' + err.message);
+        return;
       }
-      const dataLines = data.trim().split('\n');
-      const infoData = dataLines.map(line => line.split('\t')); //SRX, SRR, exp name, organism, study name
+      // 結果の表示
+      const rows2r = {}
+      for(let i of rows2){rows2r[i.srr_id]=i}
       const rowplus = rows.map(item => {
-        const found = infoData.find(element => element[1] === item.srr_name);
-        //console.log(found);
-        if(found !== undefined){
-          item.expname = found[2];
-          item.organism = found[3];
-          item.studyname = found[4];
+        if(item.srr_name in rows2r){
+          item.expname = rows2r[item.srr_name].srx_name
+          item.organism = rows2r[item.srr_name].srs_org
+          item.studyname = rows2r[item.srr_name].srp_name
+          item.reads = rows2r[item.srr_name].srr_reads
+          item.geo = rows2r[item.srr_name].srs_geo
+        }else{
+           item.expname = ""
+           item.organism = ""
+           item.studyname = ""
+           item.reads = ""
+           item.geo = ""
         }
-        return item;
+        return item
       });
-      db.get("SELECT COUNT(*) AS count FROM data WHERE sp_name = ? ORDER BY percent DESC LIMIT 1000", [aValue], (err, row) => {
+
+      db.get("SELECT COUNT(*) AS count FROM data WHERE sp_name = ?", [aValue], (err, row) => {
         if (err) {
           return console.error(err.message);
         }
         res.render('species', { results: rowplus, key: req.query.name, count: row.count });
       });
     });
+
+  });
+
+  // データベース接続を閉じる
+  db.close((err) => {
+    if (err) {
+      console.error('データベースの切断エラー: ' + err.message);
+      return;
+    }
+    console.log('データベースの接続を閉じました');
   });
 });
 

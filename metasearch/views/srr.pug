@@ -4,7 +4,8 @@ block content
     .full-page-result
         header
             .head-content
-                h1 #{key}
+                h1
+                   a(href='https://www.ncbi.nlm.nih.gov/sra/?term='+key) #{key}
         main
             .main-content-result
                 table#myTable

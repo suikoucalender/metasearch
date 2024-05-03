@@ -14,6 +14,8 @@ block content
                            th Experiment name
                            th Organism
                            th Study name
+                           th Total reads
+                           th Geolocation
                    tbody
                          each result in results
                            tr
@@ -23,3 +25,5 @@ block content
                              td= result.expname
                              td= result.organism
                              td= result.studyname
+                             td= result.reads
+                             td= result.geo
