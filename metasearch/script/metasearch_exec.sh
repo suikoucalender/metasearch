@@ -60,7 +60,7 @@ cat $newfilename.tsv.result.$k |awk -F'\t' '
  FILENAME==ARGV[2]&&$2 in a2{c[$2]=$3; d[$2]=$4; e[$2]=$5}
  END{for(i=1;i<=length(a); i++){print a[i]"\t"b[i]"\t"c[a[i]]"\t"d[a[i]]"\t"e[a[i]]}}' /dev/stdin data/sra_info.txt > tmp/$hash/$k.output.sampleinfo.txt
 echo "<div class='info'><h3>Similarity and sample information</h3>" >> tmp/$hash/$k.output.html
-awk -F'\t' 'BEGIN{print " <table id=\"info\"><thead><tr><th>ID</th><th>value</th><th>Experiment name</th><th>Organism</th><th>Study name</th></tr></thead><tbody>"}
+awk -F'\t' 'BEGIN{print " <table id=\"info\"><thead><tr><th>ID</th><th>value</th><th>Experiment name</th><th>Organism</th><th>Study name</th><th>Geolocation</th></tr></thead><tbody>"}
  {print " <tr>"; print "  <td><a href=\"https://www.ncbi.nlm.nih.gov/sra/?term="$1"\">"$1"</a></td>"; for(i=2;i<=NF;i++){print "  <td>"$i"</td>"}; print " </tr>"} END{print "</tbody></table>"}' tmp/$hash/$k.output.sampleinfo.txt >> tmp/$hash/$k.output.html
 echo "</div>" >> tmp/$hash/$k.output.html
 
