@@ -5,17 +5,38 @@ block content
         header
                 h1 #{key}
                 h2 Appears in #{count} samples
+                style(type="text/css").
+                   table {
+                      width: 100%; /* テーブルの幅を親要素に合わせる */
+                      table-layout: fixed; /* セルの幅を固定 */
+                      border-collapse: collapse; /* ボーダーの重複をなくす */
+                   }
+                   th, td {
+                      border: 1px solid #ccc; /* セルにボーダーを設定 */
+                      //padding: 8px; /* パディングを追加 */
+                      //word-wrap: break-word; /* 単語の途中でも改行を許可 */
+                   }
+                  .wide {
+                     width: 50%; /* 文字数が多い列 */
+                  }
+                  .middle {
+                     width: 25%; /* 文字数が多い列 */
+                  }
+                  .narrow {
+                     width: 13%; /* 文字数が少ない列 */
+                  }
+
         main
                 table#myTable
                    thead
                        tr
-                           th SRR
-                           th percent
-                           th Experiment name
-                           th Organism
-                           th Study name
-                           th Total reads
-                           th Geolocation
+                           th.middle SRR
+                           th.narrow percent
+                           th.wide Experiment name
+                           th.middle Organism
+                           th.wide Study name
+                           th.narrow Total reads
+                           th.narrow Geolocation
                    tbody
                          each result in results
                            tr
